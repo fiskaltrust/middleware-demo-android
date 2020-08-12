@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30323.103
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fiskaltrust.Middleware.Demo", "fiskaltrust.Middleware.Demo.csproj", "{9A59A210-70A8-4F08-B74C-0764B6F860F9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9A59A210-70A8-4F08-B74C-0764B6F860F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A59A210-70A8-4F08-B74C-0764B6F860F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A59A210-70A8-4F08-B74C-0764B6F860F9}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{9A59A210-70A8-4F08-B74C-0764B6F860F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A59A210-70A8-4F08-B74C-0764B6F860F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A59A210-70A8-4F08-B74C-0764B6F860F9}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {411D10B4-0968-4DD0-9434-AE9CB132A74C}
+	EndGlobalSection
+EndGlobal
