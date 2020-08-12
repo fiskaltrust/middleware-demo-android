@@ -15,9 +15,9 @@ namespace fiskaltrust.Middleware.Demo
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
     public class MainActivity : AppCompatActivity
     {
-        private const string URL = "grpc://localhost:1400";
-        private const string CASHBOX_ID = "4481f82c-a167-4578-832f-a0948c22c3c4";
-        private const string ACCESS_TOKEN = "BDnVd83nE4yHdla1e92ecyGuFyMeyAVLt78ttMLPjsvPgUTzyjUlzX6LIP1wc14Bbsj2LVH3Dzqwucc763lGVDE=";
+        private const string QUEUE_URL = "grpc://localhost:1400";
+        private const string CASHBOX_ID = "<your-cashbox-id>";
+        private const string ACCESS_TOKEN = "<your-access-token>";
         private const bool SANDBOX = true;
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -194,7 +194,7 @@ namespace fiskaltrust.Middleware.Demo
         {
             return await GrpcPosFactory.CreatePosAsync(new GrpcClientOptions
             {
-                Url = new Uri(URL)
+                Url = new Uri(QUEUE_URL)
             });
         }
 
