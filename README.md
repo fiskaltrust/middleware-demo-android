@@ -1,5 +1,5 @@
 # fiskaltrust.Middleware demo (Android)
-Demo application written in Java and Xamarin that demonstrate how to call the fiskaltrust.Middleware on Android devices using gRPC.
+Demo applications written in Java and Xamarin that demonstrate how to call the German fiskaltrust.Middleware on Android devices using gRPC.
 
 ## Getting Started
 
