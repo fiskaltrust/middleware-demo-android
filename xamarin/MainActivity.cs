@@ -17,9 +17,9 @@ namespace fiskaltrust.Middleware.Demo
     public class MainActivity : AppCompatActivity
     {
         private const string QUEUE_URL_GRPC = "grpc://localhost:1400";
-        private const string QUEUE_URL_REST = "http://localhost:1500/c5b8a06a-88cb-4d6d-88bf-0405c146a4b8";
-        private const string CASHBOX_ID = "bbe826c1-f6d3-4cd9-9ac2-af9acfab300b";
-        private const string ACCESS_TOKEN = "BNsgpihE1twvA13mC3i1/iUBprvCv2wJMDmMw0X653wO1AhN8BFtiNpLX5q490ArUBiIiV8JS9JOCu0S9cOIfAk=";
+        private const string QUEUE_URL_REST = "http://localhost:1500/queue";
+        private const string CASHBOX_ID = "<your-cashbox-id>";
+        private const string ACCESS_TOKEN = "<your-access-token>";
         private const bool SANDBOX = true;
 
         protected override void OnCreate(Bundle savedInstanceState)
