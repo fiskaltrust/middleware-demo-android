@@ -9,13 +9,15 @@ using System.Threading.Tasks;
 using fiskaltrust.Middleware.Interface.Client.Grpc;
 using fiskaltrust.ifPOS.v1;
 using Newtonsoft.Json;
+using fiskaltrust.Middleware.Interface.Client.Http;
 
 namespace fiskaltrust.Middleware.Demo
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
     public class MainActivity : AppCompatActivity
     {
-        private const string QUEUE_URL = "grpc://localhost:1400";
+        private const string QUEUE_URL_GRPC = "grpc://localhost:1400";
+        private const string QUEUE_URL_REST = "http://localhost:1500/queue";
         private const string CASHBOX_ID = "<your-cashbox-id>";
         private const string ACCESS_TOKEN = "<your-access-token>";
         private const bool SANDBOX = true;
@@ -44,8 +46,10 @@ namespace fiskaltrust.Middleware.Demo
         {
             SetButtonsEnabled(false);
 
-            var componentName = new ComponentName("eu.fiskaltrust.androidlauncher", "eu.fiskaltrust.androidlauncher.Start");
-            
+            var componentName = FindViewById<RadioButton>(Resource.Id.radioGrpc).Checked
+                ? new ComponentName("eu.fiskaltrust.androidlauncher.grpc", "eu.fiskaltrust.androidlauncher.grpc.Start")
+                : new ComponentName("eu.fiskaltrust.androidlauncher.http", "eu.fiskaltrust.androidlauncher.http.Start");
+
             var intent = new Intent(Intent.ActionSend);
             intent.SetComponent(componentName);
             intent.PutExtra("cashboxid", CASHBOX_ID);
@@ -62,7 +66,9 @@ namespace fiskaltrust.Middleware.Demo
             SetButtonsEnabled(false);
 
             var intent = new Intent(Intent.ActionSend);
-            var componentName = new ComponentName("eu.fiskaltrust.androidlauncher", "eu.fiskaltrust.androidlauncher.Stop");
+            var componentName = FindViewById<RadioButton>(Resource.Id.radioGrpc).Checked
+                ? new ComponentName("eu.fiskaltrust.androidlauncher.grpc", "eu.fiskaltrust.androidlauncher.grpc.Stop")
+                : new ComponentName("eu.fiskaltrust.androidlauncher.http", "eu.fiskaltrust.androidlauncher.http.Stop");
             intent.SetComponent(componentName);
             SendBroadcast(intent);
 
@@ -192,10 +198,20 @@ namespace fiskaltrust.Middleware.Demo
 
         private async Task<IPOS> GetPOSAsync()
         {
-            return await GrpcPosFactory.CreatePosAsync(new GrpcClientOptions
+            if (FindViewById<RadioButton>(Resource.Id.radioGrpc).Checked)
             {
-                Url = new Uri(QUEUE_URL)
-            });
+                return await GrpcPosFactory.CreatePosAsync(new GrpcClientOptions
+                {
+                    Url = new Uri(QUEUE_URL_GRPC)
+                });
+            }
+            else
+            {
+                return await HttpPosFactory.CreatePosAsync(new HttpPosClientOptions
+                {
+                    Url = new Uri(QUEUE_URL_REST)
+                });
+            }
         }
 
         private void SetButtonsEnabled(bool state)
