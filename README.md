@@ -13,13 +13,13 @@ In order to use these demo applications, the following prerequisites are require
 
 The **Java example** in this repository uses the _.proto_ files of the fiskaltrust Middleware interface to automatically generate the client and the contracts at build time via the officially suggested gRPC packages (a comprehensive tutorial and overview can be found [here](https://grpc.io/docs/tutorials/basic/java/)). The latest _.proto_ files are available in our [interface-doc repository](https://github.com/fiskaltrust/interface-doc/tree/master/dist/protos).
 
-The **Xamarin/C# example** uses the [fiskaltrust.Middleware.Interface.Client.Grpc](https://www.nuget.org/packages/fiskaltrust.Middleware.Interface.Client.Grpc/) NuGet package, which doesn't need the _.proto_ files. A more detailed documentation about this package can be found in its [repository](https://github.com/fiskaltrust/middleware-interface-dotnet). HTTP works without any additional required files anyway.
+The **Xamarin/C# example** uses the [fiskaltrust.Middleware.Interface.Client.Grpc](https://www.nuget.org/packages/fiskaltrust.Middleware.Interface.Client.Grpc/) NuGet package, which doesn't need the _.proto_ files. A more detailed documentation about this package can be found in its [repository](https://github.com/fiskaltrust/middleware-interface-dotnet). HTTP works without any additional required files anyway, and uses the [fiskaltrust.Middleware.Interface.Client.Http](https://www.nuget.org/packages/fiskaltrust.Middleware.Interface.Client.Http/) package.
 
 ### Running the Demo
-Make sure to download the desired Android Launcher (gRPC or HTTP) from the Portal and install the APK on your device first. This App contains a background service that can be started and stopped via intents, and spins up a gRPC server. Thus, the Android App behaves exactly the same as the fiskaltrust.Middleware does on Desktop operating systems.
+Make sure to download the respective Android Launcher (gRPC or HTTP) from the Portal and install the APK on your device first (or get it from Google Play). This App contains a background service that can be started and stopped via intents, and spins up a gRPC server. Thus, the Android App behaves exactly the same as the fiskaltrust.Middleware does on Desktop operating systems.
 
 There are some limitations when configuring an Android Cashbox in the Portal:
-- The cashbox must not WCF URLs (neither the SCU nor the Queue), as they are not supported on Android.
+- The cashbox must not contain WCF URLs (neither the SCU nor the Queue), as they are not supported on Android.
 - Currently, only the following packages are supported:
   - fiskaltrust.Middleware.Queue.SQLite
   - fiskaltrust.Middleware.SCU.Fiskaly
@@ -59,11 +59,13 @@ intent.setComponent(componentName);
 intent.putExtra("cashboxid", "<your-cashbox-id>");
 intent.putExtra("accesstoken", "<your-access-token>");
 intent.putExtra("sandbox", true);   // or "false" for production Cashboxes
+// Optionally, for development purposes only:
+intent.putExtra("loglevel", "Debug");   // default is "Information"
 
 sendBroadcast(intent);
 ```
 
-**Please note that the Middleware will not be immediately available after this.** Intents are processed asynchronously, and initializing most TSEs takes some time (e.g. up to 45 seconds for Swissbit; fiskaly SCUs are faster). We recommend handling this e.g. by polling the Echo endpoint of the queue in a failsafe way.
+**Please note that the Middleware will not be immediately available after this.** Intents are processed asynchronously, and initializing most TSEs takes some time (e.g. up to 45 seconds for Swissbit; fiskaly SCUs are faster). We recommend polling our state endpoint until the TSE is intialized (see below).
 
 A stop intent looks similar:
 
@@ -87,6 +89,18 @@ POSGrpc.POSBlockingStub blockingStub = POSGrpc.newBlockingStub(channel);
 IPOS.EchoRequest request = IPOS.EchoRequest.newBuilder().setMessage("Hello Android!").build();
 IPOS.EchoResponse response = blockingStub.echo(request);
 ```
+
+### State and log information
+The fiskaltrust.Middleware for Android publishes two endpoints to request both the state and the logs under the well-known HTTP address and port http://localhost:4654/:
+- `GET http://localhost:4654/fiskaltrust/state` returns a JSON object with the current state of the Middleware and the reason, which looks like this:
+   ```
+   {
+     "CurrentState": "Uninitialized" | "Initializing" | "Running" | "Error",
+     "Reason": "CONFIG_NOT_FOUND" | "REMOUNT_REQUIRED" | "<informational reason phrase>"
+   }
+   ```
+   `REMOUNT_REQUIRED` is only applicable for Swissbit TSEs, which require a remount when they're used in an Android App for the first time (i.e. they need to be plugged out and in again).
+- `GET http://localhost:4654/fiskaltrust/logs` returns the raw log files written by the Middleware for later usage. The same messages are also written to LogCat, which might be more convenient during development. This endpoint is authenticated via HTTP header values: `cashboxid` and `accesstoken`.
 
 ### Additional information
 The fiskaltrust.Middleware is written in C# and uses some language-specific functionalities that a user needs to take care of when connecting via gRPC:
