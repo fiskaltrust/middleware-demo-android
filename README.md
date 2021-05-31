@@ -59,6 +59,7 @@ intent.setComponent(componentName);
 intent.putExtra("cashboxid", "<your-cashbox-id>");
 intent.putExtra("accesstoken", "<your-access-token>");
 intent.putExtra("sandbox", true);   // or "false" for production Cashboxes
+intent.putExtra("enableCloseButton", false);   // or "true" to display a close button in the notification
 // Optionally, for development purposes only:
 intent.putExtra("loglevel", "Debug");   // default is "Information"
 
