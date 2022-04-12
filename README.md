@@ -103,6 +103,9 @@ The fiskaltrust.Middleware for Android publishes two endpoints to request both t
    `REMOUNT_REQUIRED` is only applicable for Swissbit TSEs, which require a remount when they're used in an Android App for the first time (i.e. they need to be plugged out and in again).
 - `GET http://localhost:4654/fiskaltrust/logs` returns the raw log files written by the Middleware for later usage. The same messages are also written to LogCat, which might be more convenient during development. This endpoint is authenticated via HTTP header values: `cashboxid` and `accesstoken`.
 
+#### Direct log access
+For security reasons, log files are stored in the private directory of the Middleware App. In case the log endpoint described above is not reachable (e.g. because the Middleware cannot be started at all), log files can also be accessed via an Android _content provider_. We've implemented a specific activity that can be queried to return a `content://` link to the latest log file. The usage of this provider is e.g. demonstrated [here](xamarin/MainActivity.cs#L206), more details about content providers are available in the [Android docs](https://developer.android.com/reference/androidx/core/content/FileProvider).
+
 ### Additional information
 The fiskaltrust.Middleware is written in C# and uses some language-specific functionalities that a user needs to take care of when connecting via gRPC:
 
