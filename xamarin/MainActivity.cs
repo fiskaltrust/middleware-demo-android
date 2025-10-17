@@ -24,8 +24,8 @@ namespace fiskaltrust.Middleware.Demo
         const int SignRequest = 1002;
         private const string QUEUE_URL_GRPC = "grpc://localhost:1400";
         private const string QUEUE_URL_REST = "http://localhost:1500/queue";
-        private const string CASHBOX_ID = "57dd5e04-49b3-4d81-862f-e5ac054117a8";
-        private const string ACCESS_TOKEN = "BEkCPEpqvzzSyvu1dUCyGXkDRg+fLkVZhJ+aHaocr0VZ+aylUkjg2NVjIzqtzy1891yUOHK8SiYw/Ap/p38Yyx0=";
+        private const string CASHBOX_ID = "";
+        private const string ACCESS_TOKEN = "";
         private const bool SANDBOX = true;
 
         private TaskCompletionSource<string> _getLogsCompletionSource;
