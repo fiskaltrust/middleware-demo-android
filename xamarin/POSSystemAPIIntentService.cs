@@ -1,18 +1,11 @@
-﻿using Microsoft.Maui.Controls;
-using Microsoft.Maui.Platform;
+﻿using Android.App;
+using Android.Content;
 using fiskaltrust.ifPOS.v1;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-
-#if ANDROID
-using AndroidX.Activity.Result;
-using AndroidX.Activity.Result.Contract;
-using Android.App;
-using Android.Content;
-#endif
 
 namespace fiskaltrust.Middleware.Demo
 {
@@ -22,18 +15,21 @@ namespace fiskaltrust.Middleware.Demo
         private const string PackageName = "eu.fiskaltrust.androidlauncher";
         private const string POSSystemAPIClassName = "eu.fiskaltrust.androidlauncher.PosSystemAPI";
 
-        private Dictionary<string, string> _headers = new Dictionary<string, string>();
+        private Dictionary<string, string> _headers => new Dictionary<string, string>
+                {
+                    { "x-cashbox-id", _cashBoxId.ToString() },
+                    { "x-cashbox-accesstoken", _accessToken },
+                };
+
+        private Guid _cashBoxId;
+        private string _accessToken;
 
         public POSSystemAPIIntentService(Guid cashBoxId, string accessToken)
         {
-            _headers = new Dictionary<string, string>
-                {
-                    { "x-cashbox-id", cashBoxId.ToString() },
-                    { "x-cashbox-accesstoken", accessToken },
-                };
+            _cashBoxId = cashBoxId;
+            _accessToken = accessToken;
         }
 
-#if ANDROID
         public Task<EchoResponse> SendEchoRequest(Activity activity, EchoRequest echoRequest)
         {
             var request = new POSSystemAPIRequest
@@ -64,6 +60,7 @@ namespace fiskaltrust.Middleware.Demo
 
         public async Task<T> PerformPOSSystemAPIIntent<T>(Activity activity, POSSystemAPIRequest request)
         {
+            request.Headers.Add("x-operation-id", Guid.NewGuid().ToString());
             var headersJson = JsonConvert.SerializeObject(request.Headers);
             var headerB64 = ToBase64Url(headersJson);
             var bodyB64 = request.Body != null ? ToBase64Url(request.Body) : null;
@@ -94,18 +91,7 @@ namespace fiskaltrust.Middleware.Demo
             System.Diagnostics.Debug.WriteLine($"PosSystemAPI Response: {content}");
             return JsonConvert.DeserializeObject<T>(content);
         }
-#else
         // Placeholder implementations for non-Android platforms
-        public Task<EchoResponse> SendEchoRequest(object activity, EchoRequest echoRequest)
-        {
-            throw new PlatformNotSupportedException("This functionality is only available on Android.");
-        }
-
-        public Task<ReceiptResponse> SignReceipt(object activity, ReceiptRequest receipt)
-        {
-            throw new PlatformNotSupportedException("This functionality is only available on Android.");
-        }
-#endif
 
         private string ToBase64Url(string text)
         {
@@ -133,4 +119,4 @@ namespace fiskaltrust.Middleware.Demo
             return Encoding.UTF8.GetString(bytes);
         }
     }
-}}
+}
