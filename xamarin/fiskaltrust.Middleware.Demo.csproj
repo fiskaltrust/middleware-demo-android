@@ -25,6 +25,12 @@
     <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="MainActivity.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MainActivity.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="fiskaltrust.Middleware.Interface.Client.Grpc">
       <Version>1.3.3</Version>
     </PackageReference>

@@ -1,12 +1,18 @@
-﻿using Android.App;
-using Android.Content;
+﻿using Microsoft.Maui.Controls;
+using Microsoft.Maui.Platform;
 using fiskaltrust.ifPOS.v1;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Xamarin.Essentials;
+
+#if ANDROID
+using AndroidX.Activity.Result;
+using AndroidX.Activity.Result.Contract;
+using Android.App;
+using Android.Content;
+#endif
 
 namespace fiskaltrust.Middleware.Demo
 {
@@ -27,6 +33,7 @@ namespace fiskaltrust.Middleware.Demo
                 };
         }
 
+#if ANDROID
         public Task<EchoResponse> SendEchoRequest(Activity activity, EchoRequest echoRequest)
         {
             var request = new POSSystemAPIRequest
@@ -82,14 +89,23 @@ namespace fiskaltrust.Middleware.Demo
                 throw new Exception(content);
             }
 
-
-            // Decode Base64URL
-     
-
-            Android.Util.Log.Info("PosSystemAPI", $"Status: {statusCode}, Type: {contentType}");
-            Android.Util.Log.Info("PosSystemAPI", $"Response: {content}");
+            // Log using MAUI logging instead of Android.Util.Log
+            System.Diagnostics.Debug.WriteLine($"PosSystemAPI Status: {statusCode}, Type: {contentType}");
+            System.Diagnostics.Debug.WriteLine($"PosSystemAPI Response: {content}");
             return JsonConvert.DeserializeObject<T>(content);
         }
+#else
+        // Placeholder implementations for non-Android platforms
+        public Task<EchoResponse> SendEchoRequest(object activity, EchoRequest echoRequest)
+        {
+            throw new PlatformNotSupportedException("This functionality is only available on Android.");
+        }
+
+        public Task<ReceiptResponse> SignReceipt(object activity, ReceiptRequest receipt)
+        {
+            throw new PlatformNotSupportedException("This functionality is only available on Android.");
+        }
+#endif
 
         private string ToBase64Url(string text)
         {
@@ -117,4 +133,4 @@ namespace fiskaltrust.Middleware.Demo
             return Encoding.UTF8.GetString(bytes);
         }
     }
-}
+}}
