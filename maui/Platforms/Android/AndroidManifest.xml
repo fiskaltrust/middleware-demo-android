@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+	<uses-sdk android:minSdkVersion="23" android:targetSdkVersion="34" />
+	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:label="fiskaltrust.Middleware Demo">
+		<receiver android:name=".FiskaltrusResponseReceiver"
+		          android:enabled="true"
+		          android:exported="true">
+			<intent-filter>
+				<action android:name="com.yourapp.FISKALTRUST_RESPONSE" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+		</receiver>
+	</application>
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+	<uses-permission android:name="android.permission.INTERNET" />
+</manifest>
