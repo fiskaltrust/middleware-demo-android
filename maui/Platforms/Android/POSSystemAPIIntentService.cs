@@ -30,7 +30,7 @@ namespace fiskaltrust.Middleware.Demo
             _accessToken = accessToken;
         }
 
-        public Task<EchoResponse> SendEchoRequest(Activity activity, EchoRequest echoRequest)
+        public Task<EchoResponse> SendEchoRequest(Activity activity, Guid operationId, EchoRequest echoRequest)
         {
             var request = new POSSystemAPIRequest
             {
@@ -41,10 +41,14 @@ namespace fiskaltrust.Middleware.Demo
                 ResponseAction = ResponseAction,
                 RequestId = new Guid().ToString()
             };
-            return PerformPOSSystemAPIIntent<EchoResponse>(activity, request);
+            if(echoRequest == null)
+            {
+                request.Body = null;
+            }
+            return PerformPOSSystemAPIIntent<EchoResponse>(activity, operationId, request);
         }
 
-        public Task<ReceiptResponse> SignReceipt(Activity activity, ReceiptRequest receipt)
+        public Task<ReceiptResponse> SignReceipt(Activity activity, Guid operationId, ReceiptRequest receipt)
         {
             var request = new POSSystemAPIRequest
             {
@@ -55,12 +59,16 @@ namespace fiskaltrust.Middleware.Demo
                 ResponseAction = ResponseAction,
                 RequestId = new Guid().ToString()
             };
-            return PerformPOSSystemAPIIntent<ReceiptResponse>(activity, request);
+            if (receipt == null)
+            {
+                request.Body = null;
+            }
+            return PerformPOSSystemAPIIntent<ReceiptResponse>(activity, operationId, request);
         }
 
-        public async Task<T> PerformPOSSystemAPIIntent<T>(Activity activity, POSSystemAPIRequest request)
+        public async Task<T> PerformPOSSystemAPIIntent<T>(Activity activity, Guid operationId, POSSystemAPIRequest request)
         {
-            request.Headers.Add("x-operation-id", Guid.NewGuid().ToString());
+            request.Headers.Add("x-operation-id", operationId.ToString());
             var headersJson = JsonConvert.SerializeObject(request.Headers);
             var headerB64 = ToBase64Url(headersJson);
             var bodyB64 = request.Body != null ? ToBase64Url(request.Body) : null;

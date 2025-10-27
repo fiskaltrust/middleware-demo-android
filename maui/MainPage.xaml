@@ -21,6 +21,15 @@
                        VerticalOptions="Center"/>
             </HorizontalStackLayout>
 
+            <!-- Retry Last Operation Button -->
+            <Button x:Name="btnRetryLastOperation"
+                    Text="🔄 Retry Last Operation"
+                    Clicked="OnRetryLastOperationClicked"
+                    BackgroundColor="#4CAF50"
+                    TextColor="White"
+                    IsVisible="False"
+                    Margin="0,0,0,10" />
+
             <!-- Start/Stop Service Buttons -->
             <HorizontalStackLayout Spacing="10">
                 <Button x:Name="btnStartService" Text="Start service" Clicked="OnStartServiceClicked" HorizontalOptions="FillAndExpand" />
