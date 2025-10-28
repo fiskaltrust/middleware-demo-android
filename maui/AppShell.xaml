@@ -19,6 +19,28 @@
         </ShellContent>
 
         <ShellContent
+            Title="Payment"
+            ContentTemplate="{DataTemplate local:PaymentPage}"
+            Route="PaymentPage">
+            <ShellContent.Icon>
+                <FontImageSource
+                    Glyph="💳"
+                    Size="20" />
+            </ShellContent.Icon>
+        </ShellContent>
+
+        <ShellContent
+            Title="Issuing"
+            ContentTemplate="{DataTemplate local:IssuingPage}"
+            Route="IssuingPage">
+            <ShellContent.Icon>
+                <FontImageSource
+                    Glyph="📋"
+                    Size="20" />
+            </ShellContent.Icon>
+        </ShellContent>
+
+        <ShellContent
             Title="Settings"
             ContentTemplate="{DataTemplate local:SettingsPage}"
             Route="SettingsPage">
