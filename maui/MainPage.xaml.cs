@@ -17,8 +17,8 @@ public partial class MainPage : ContentPage
 {
     private const string QUEUE_URL_GRPC = "grpc://localhost:1400";
     private const string QUEUE_URL_REST = "http://localhost:1500/queue";
-    private const string CASHBOX_ID = "57dd5e04-49b3-4d81-862f-e5ac054117a8";
-    private const string ACCESS_TOKEN = "BEkCPEpqvzzSyvu1dUCyGXkDRg+fLkVZhJ+aHaocr0VZ+aylUkjg2NVjIzqtzy1891yUOHK8SiYw/Ap/p38Yyx0=";
+    private const string CASHBOX_ID = "e4de7978-23b8-4e13-ae7e-c3620f30d861";
+    private const string ACCESS_TOKEN = "BKjaxDryAtwxN1AeDh/fAVgTZQ6Md3C6aQmXiMhq+q3NmvJdU9LOZZDlzbZQbfKAr5mzvGMyyjwWn9uPG3FxE6w=";
     private const bool SANDBOX = true;
 
 #if ANDROID
@@ -188,10 +188,11 @@ public partial class MainPage : ContentPage
 
     private async Task<string> ExecuteSignRequestAsync(Guid? operationId = null)
     {
+        var codes = GetReceiptCodes();
         var receiptRequest = new ReceiptRequest
         {
             ftCashBoxID = CASHBOX_ID,
-            ftReceiptCase = 0x4445_0001_0000_0000,
+            ftReceiptCase = codes.SignRequest,
             cbReceiptReference = Guid.NewGuid().ToString(),
             cbChargeItems = Array.Empty<ChargeItem>(),
             cbPayItems = Array.Empty<PayItem>()
@@ -221,10 +222,10 @@ public partial class MainPage : ContentPage
 
     private async Task<string> ExecuteStartReceiptAsync(Guid? operationId = null)
     {
+        var codes = GetReceiptCodes();
         var receiptRequest = new ReceiptRequest
         {
             ftCashBoxID = CASHBOX_ID,
-            ftPosSystemId = "d4a62055-ca6c-4372-ae4d-f835a88e4a5d",
             cbTerminalID = "T1",
             cbReceiptReference = "2020020120152812",
             cbReceiptMoment = DateTime.UtcNow,
@@ -232,10 +233,11 @@ public partial class MainPage : ContentPage
             cbUser = "Receptionist",
             cbArea = "System",
             cbSettlement = "",
-            ftReceiptCase = 0x4445_0001_0000_0003,
+            ftReceiptCase = codes.StartReceipt,
             cbChargeItems = Array.Empty<ChargeItem>(),
             cbPayItems = Array.Empty<PayItem>()
         };
+        System.Diagnostics.Debug.WriteLine($"[Danielllllllllllllllll] Using receipt: {codes.StartReceipt}");
 
 #if ANDROID
         if (IsIntentModeSelected() && operationId.HasValue)
@@ -261,6 +263,7 @@ public partial class MainPage : ContentPage
 
     private async Task<string> ExecuteZeroReceiptAsync(Guid? operationId = null)
     {
+        var codes = GetReceiptCodes();
         var receiptRequest = new ReceiptRequest
         {
             ftCashBoxID = CASHBOX_ID,
@@ -272,10 +275,11 @@ public partial class MainPage : ContentPage
             cbUser = "Receptionist",
             cbArea = "System",
             cbSettlement = "",
-            ftReceiptCase = 0x4445_0001_0000_0002,
+            ftReceiptCase = codes.ZeroReceipt,
             cbChargeItems = Array.Empty<ChargeItem>(),
             cbPayItems = Array.Empty<PayItem>()
         };
+        System.Diagnostics.Debug.WriteLine($"[Danielllllllllllllllll] Using receipt: {codes.StartReceipt}");
 
 #if ANDROID
         if (IsIntentModeSelected() && operationId.HasValue)
@@ -287,7 +291,7 @@ public partial class MainPage : ContentPage
         {
             operationId ??= Guid.NewGuid();
             var response = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, operationId.Value, receiptRequest);
-            SetLastOperation(operationId.Value, JsonConvert.SerializeObject(receiptRequest), OperationType.StartReceipt, null, "Start Receipt");
+            SetLastOperation(operationId.Value, JsonConvert.SerializeObject(receiptRequest), OperationType.ZeroReceipt, null, "Zero Receipt");
             return JsonConvert.SerializeObject(response, Formatting.Indented);
         }
         else
@@ -307,6 +311,37 @@ public partial class MainPage : ContentPage
     private bool IsGrpcSelected()
     {
         return SettingsPage.GetSelectedProtocol().ToLower() == "grpc";
+    }
+
+    private ReceiptCodes GetReceiptCodes()
+    {
+        var country = SettingsPage.GetSelectedCountry().ToUpper();
+        System.Diagnostics.Debug.WriteLine($"[Danielllllllllllllllll] Country: {country}");
+        if (country == "IT")
+        {
+            return new ReceiptCodes
+            {
+                SignRequest = 0x4954_2000_0000_0001,
+                StartReceipt = 0x4954_2000_0000_4001,
+                ZeroReceipt = 0x4954_2000_0000_2000
+            };
+        }
+        else // Default to DE
+        {
+            return new ReceiptCodes
+            {
+                SignRequest = 0x4445_0001_0000_0000,
+                StartReceipt = 0x4445_0001_0000_0003,
+                ZeroReceipt = 0x4445_0001_0000_0002
+            };
+        }
+    }
+
+    private class ReceiptCodes
+    {
+        public long SignRequest { get; set; }
+        public long StartReceipt { get; set; }
+        public long ZeroReceipt { get; set; }
     }
 
     private void OnStartServiceClicked(object? sender, EventArgs e)
@@ -428,10 +463,11 @@ public partial class MainPage : ContentPage
     {
         SetButtonsEnabled(false);
 
+        var codes = GetReceiptCodes();
         var receiptRequest = new ReceiptRequest
         {
             ftCashBoxID = CASHBOX_ID,
-            ftReceiptCase = 0x4445_0001_0000_0000,
+            ftReceiptCase = codes.SignRequest,
             cbReceiptReference = Guid.NewGuid().ToString(),
             cbChargeItems = Array.Empty<ChargeItem>(),
             cbPayItems = Array.Empty<PayItem>()
@@ -469,6 +505,7 @@ public partial class MainPage : ContentPage
 
         SetButtonsEnabled(false);
 
+        var codes = GetReceiptCodes();
         var receiptRequest = new ReceiptRequest
         {
             ftCashBoxID = CASHBOX_ID,
@@ -480,7 +517,7 @@ public partial class MainPage : ContentPage
             cbUser = "Receptionist",
             cbArea = "System",
             cbSettlement = "",
-            ftReceiptCase = 0x4445_0001_0000_0003,
+            ftReceiptCase = codes.StartReceipt,
             cbChargeItems = Array.Empty<ChargeItem>(),
             cbPayItems = Array.Empty<PayItem>()
         };
@@ -517,6 +554,7 @@ public partial class MainPage : ContentPage
 
         SetButtonsEnabled(false);
 
+        var codes = GetReceiptCodes();
         var receiptRequest = new ReceiptRequest
         {
             ftCashBoxID = CASHBOX_ID,
@@ -528,7 +566,7 @@ public partial class MainPage : ContentPage
             cbUser = "Receptionist",
             cbArea = "System",
             cbSettlement = "",
-            ftReceiptCase = 0x4445_0001_0000_0002,
+            ftReceiptCase = codes.ZeroReceipt,
             cbChargeItems = Array.Empty<ChargeItem>(),
             cbPayItems = Array.Empty<PayItem>()
         };

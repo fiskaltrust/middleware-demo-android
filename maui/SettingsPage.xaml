@@ -22,57 +22,48 @@
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="15">
 
-                    <RadioButton x:Name="radioGrpc"
-                                 Content="gRPC"
-                                 GroupName="CommType"
-                                 CheckedChanged="OnProtocolChanged">
-                        <RadioButton.ContentTemplate>
-                            <DataTemplate>
-                                <VerticalStackLayout>
-                                    <Label Text="gRPC" FontAttributes="Bold" FontSize="16"/>
-                                    <Label Text="Fast binary protocol for high-performance communication"
-                                           FontSize="12"
-                                           TextColor="Gray"/>
-                                </VerticalStackLayout>
-                            </DataTemplate>
-                        </RadioButton.ContentTemplate>
-                    </RadioButton>
+                    <StackLayout Orientation="Horizontal" Spacing="10">
+                        <RadioButton x:Name="radioGrpc"
+                                     GroupName="CommType"
+                                     CheckedChanged="OnProtocolChanged"
+                                     VerticalOptions="Start"/>
+                        <VerticalStackLayout>
+                            <Label Text="gRPC" FontAttributes="Bold" FontSize="16"/>
+                            <Label Text="Fast binary protocol for high-performance communication"
+                                   FontSize="12"
+                                   TextColor="Gray"/>
+                        </VerticalStackLayout>
+                    </StackLayout>
 
                     <BoxView Color="LightGray" HeightRequest="1"/>
 
-                    <RadioButton x:Name="radioHttp"
-                                 Content="HTTP"
-                                 GroupName="CommType"
-                                 CheckedChanged="OnProtocolChanged">
-                        <RadioButton.ContentTemplate>
-                            <DataTemplate>
-                                <VerticalStackLayout>
-                                    <Label Text="HTTP/REST" FontAttributes="Bold" FontSize="16"/>
-                                    <Label Text="Standard HTTP REST API for maximum compatibility"
-                                           FontSize="12"
-                                           TextColor="Gray"/>
-                                </VerticalStackLayout>
-                            </DataTemplate>
-                        </RadioButton.ContentTemplate>
-                    </RadioButton>
+                    <StackLayout Orientation="Horizontal" Spacing="10">
+                        <RadioButton x:Name="radioHttp"
+                                     GroupName="CommType"
+                                     CheckedChanged="OnProtocolChanged"
+                                     VerticalOptions="Start"/>
+                        <VerticalStackLayout>
+                            <Label Text="HTTP/REST" FontAttributes="Bold" FontSize="16"/>
+                            <Label Text="Standard HTTP REST API for maximum compatibility"
+                                   FontSize="12"
+                                   TextColor="Gray"/>
+                        </VerticalStackLayout>
+                    </StackLayout>
 
                     <BoxView Color="LightGray" HeightRequest="1"/>
 
-                    <RadioButton x:Name="radioIntent"
-                                 Content="Intent"
-                                 GroupName="CommType"
-                                 CheckedChanged="OnProtocolChanged">
-                        <RadioButton.ContentTemplate>
-                            <DataTemplate>
-                                <VerticalStackLayout>
-                                    <Label Text="Intent-based" FontAttributes="Bold" FontSize="16"/>
-                                    <Label Text="Android Intent system for inter-app communication"
-                                           FontSize="12"
-                                           TextColor="Gray"/>
-                                </VerticalStackLayout>
-                            </DataTemplate>
-                        </RadioButton.ContentTemplate>
-                    </RadioButton>
+                    <StackLayout Orientation="Horizontal" Spacing="10">
+                        <RadioButton x:Name="radioIntent"
+                                     GroupName="CommType"
+                                     CheckedChanged="OnProtocolChanged"
+                                     VerticalOptions="Start"/>
+                        <VerticalStackLayout>
+                            <Label Text="Intent-based" FontAttributes="Bold" FontSize="16"/>
+                            <Label Text="Android Intent system for inter-app communication"
+                                   FontSize="12"
+                                   TextColor="Gray"/>
+                        </VerticalStackLayout>
+                    </StackLayout>
 
                 </VerticalStackLayout>
             </Border>
@@ -92,6 +83,76 @@
                             <FormattedString>
                                 <Span Text="The selected protocol determines how this app communicates with the fiskaltrust.Middleware service.&#x0a;&#x0a;"/>
                                 <Span Text="Make sure the corresponding launcher app (gRPC or HTTP) is installed and running on your device." FontAttributes="Bold"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Country Selection -->
+            <Label Text="Country Configuration"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   Margin="0,30,0,0"/>
+
+            <Border StrokeThickness="1"
+                    Stroke="LightGray"
+                    BackgroundColor="White"
+                    Padding="15"
+                    Margin="0,0,0,10">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="15">
+
+                    <StackLayout Orientation="Horizontal" Spacing="10">
+                        <RadioButton x:Name="radioDE"
+                                     GroupName="Country"
+                                     CheckedChanged="OnCountryChanged"
+                                     IsChecked="True"
+                                     VerticalOptions="Start"/>
+                        <VerticalStackLayout>
+                            <Label Text="🇩🇪 Germany (DE)" FontAttributes="Bold" FontSize="16"/>
+                            <Label Text="German fiscal regulations and receipt cases"
+                                   FontSize="12"
+                                   TextColor="Gray"/>
+                        </VerticalStackLayout>
+                    </StackLayout>
+
+                    <BoxView Color="LightGray" HeightRequest="1"/>
+
+                    <StackLayout Orientation="Horizontal" Spacing="10">
+                        <RadioButton x:Name="radioIT"
+                                     GroupName="Country"
+                                     CheckedChanged="OnCountryChanged"
+                                     VerticalOptions="Start"/>
+                        <VerticalStackLayout>
+                            <Label Text="🇮🇹 Italy (IT)" FontAttributes="Bold" FontSize="16"/>
+                            <Label Text="Italian fiscal regulations and receipt cases"
+                                   FontSize="12"
+                                   TextColor="Gray"/>
+                        </VerticalStackLayout>
+                    </StackLayout>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <Border StrokeThickness="1"
+                    Stroke="#E3F2FD"
+                    BackgroundColor="#E3F2FD"
+                    Padding="15"
+                    Margin="0,0,0,20">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="ℹ️ About Country Settings" FontAttributes="Bold" FontSize="14"/>
+                    <Label FontSize="12" LineBreakMode="WordWrap">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="The selected country determines the fiscal receipt case codes used in sign operations.&#x0a;&#x0a;"/>
+                                <Span Text="DE: Uses German fiscal regulations (0x4445_xxxx_xxxx_xxxx)&#x0a;"/>
+                                <Span Text="IT: Uses Italian fiscal regulations (0x4954_xxxx_xxxx_xxxx)" FontAttributes="Bold"/>
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>

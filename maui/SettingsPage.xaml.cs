@@ -10,13 +10,15 @@ namespace fiskaltrust.Middleware.Demo;
 public partial class SettingsPage : ContentPage
 {
     private const string PROTOCOL_PREFERENCE_KEY = "selected_protocol";
-    private const string CASHBOX_ID = "57dd5e04-49b3-4d81-862f-e5ac054117a8";
-    private const string ACCESS_TOKEN = "BEkCPEpqvzzSyvu1dUCyGXkDRg+fLkVZhJ+aHaocr0VZ+aylUkjg2NVjIzqtzy1891yUOHK8SiYw/Ap/p38Yyx0=";
+    private const string COUNTRY_PREFERENCE_KEY = "selected_country";
+    private const string CASHBOX_ID = "e4de7978-23b8-4e13-ae7e-c3620f30d861";
+    private const string ACCESS_TOKEN = "BKjaxDryAtwxN1AeDh/fAVgTZQ6Md3C6aQmXiMhq+q3NmvJdU9LOZZDlzbZQbfKAr5mzvGMyyjwWn9uPG3FxE6w=";
 
     public SettingsPage()
     {
         InitializeComponent();
         LoadSavedProtocol();
+        LoadSavedCountry();
     }
 
     private void LoadSavedProtocol()
@@ -63,6 +65,58 @@ public partial class SettingsPage : ContentPage
     public static string GetSelectedProtocol()
     {
         return Preferences.Get(PROTOCOL_PREFERENCE_KEY, "grpc");
+    }
+
+    private void LoadSavedCountry()
+    {
+        var savedCountry = Preferences.Get(COUNTRY_PREFERENCE_KEY, "DE");
+
+        switch (savedCountry.ToUpper())
+        {
+            case "DE":
+                radioDE.IsChecked = true;
+                break;
+            case "IT":
+                radioIT.IsChecked = true;
+                break;
+            default:
+                radioDE.IsChecked = true;
+                break;
+        }
+    }
+
+    private void OnCountryChanged(object? sender, CheckedChangedEventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine($"[Danielllllllllllllllll DEBUG] OnCountryChanged called. Checked: {e.Value}");
+        
+        if (e.Value)
+        {
+            var radioButton = sender as RadioButton;
+            System.Diagnostics.Debug.WriteLine($"[Danielllllllllllllllll DEBUG] RadioButton: {radioButton?.GetHashCode()}");
+            System.Diagnostics.Debug.WriteLine($"[Danielllllllllllllllll DEBUG] radioDE HashCode: {radioDE?.GetHashCode()}");
+            System.Diagnostics.Debug.WriteLine($"[Danielllllllllllllllll DEBUG] radioIT HashCode: {radioIT?.GetHashCode()}");
+            
+            if (radioButton == radioDE)
+            {
+                System.Diagnostics.Debug.WriteLine("[Danielllllllllllllllll DEBUG] Setting country to DE");
+                Preferences.Set(COUNTRY_PREFERENCE_KEY, "DE");
+            }
+            else if (radioButton == radioIT)
+            {
+                System.Diagnostics.Debug.WriteLine("[Danielllllllllllllllll DEBUG] Setting country to IT");
+                Preferences.Set(COUNTRY_PREFERENCE_KEY, "IT");
+            }
+            
+            var saved = Preferences.Get(COUNTRY_PREFERENCE_KEY, "DE");
+            System.Diagnostics.Debug.WriteLine($"[Danielllllllllllllllll DEBUG] Saved country: {saved}");
+        }
+    }
+
+    public static string GetSelectedCountry()
+    {
+        var country = Preferences.Get(COUNTRY_PREFERENCE_KEY, "DE");
+        System.Diagnostics.Debug.WriteLine($"[COUNTRY DEBUG] GetSelectedCountry returning: {country}");
+        return country;
     }
 
     private async void OnRequestLogsClicked(object? sender, EventArgs e)
