@@ -17,9 +17,10 @@ public partial class MainPage : ContentPage
 {
     private const string QUEUE_URL_GRPC = "grpc://localhost:1400";
     private const string QUEUE_URL_REST = "http://localhost:1500/queue";
-    private const string CASHBOX_ID = "57dd5e04-49b3-4d81-862f-e5ac054117a8";
-    private const string ACCESS_TOKEN = "BEkCPEpqvzzSyvu1dUCyGXkDRg+fLkVZhJ+aHaocr0VZ+aylUkjg2NVjIzqtzy1891yUOHK8SiYw/Ap/p38Yyx0=";
     private const bool SANDBOX = true;
+
+    private static string CASHBOX_ID => SettingsPage.GetCashboxId();
+    private static string ACCESS_TOKEN => SettingsPage.GetAccessToken();
 
 #if ANDROID
     private POSSystemAPIIntentService? _fiskaltrusClient;
@@ -39,7 +40,7 @@ public partial class MainPage : ContentPage
 
     private class LastOperationInfo
     {
-        public Guid OperationID { get; set; } 
+        public Guid OperationID { get; set; }
         public OperationType Type { get; set; }
         public string Body { get; set; } = string.Empty;
         public string? Message { get; set; }
@@ -49,14 +50,17 @@ public partial class MainPage : ContentPage
     public MainPage()
     {
         InitializeComponent();
-#if ANDROID
-        _fiskaltrusClient = new POSSystemAPIIntentService(Guid.Parse(CASHBOX_ID), ACCESS_TOKEN);
-#endif
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
+#if ANDROID
+        if (Guid.TryParse(CASHBOX_ID, out var cashboxGuid))
+        {
+            _fiskaltrusClient = new POSSystemAPIIntentService(cashboxGuid, ACCESS_TOKEN);
+        }
+#endif
         UpdateProtocolDisplay();
         UpdateUIForProtocol();
     }

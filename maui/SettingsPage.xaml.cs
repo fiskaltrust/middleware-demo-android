@@ -10,13 +10,43 @@ namespace fiskaltrust.Middleware.Demo;
 public partial class SettingsPage : ContentPage
 {
     private const string PROTOCOL_PREFERENCE_KEY = "selected_protocol";
-    private const string CASHBOX_ID = "57dd5e04-49b3-4d81-862f-e5ac054117a8";
-    private const string ACCESS_TOKEN = "BEkCPEpqvzzSyvu1dUCyGXkDRg+fLkVZhJ+aHaocr0VZ+aylUkjg2NVjIzqtzy1891yUOHK8SiYw/Ap/p38Yyx0=";
+    private const string CASHBOX_ID_PREFERENCE_KEY = "cashbox_id";
+    private const string ACCESS_TOKEN_PREFERENCE_KEY = "access_token";
+
+    private const string DEFAULT_CASHBOX_ID = "57dd5e04-49b3-4d81-862f-e5ac054117a8";
+    private const string DEFAULT_ACCESS_TOKEN = "BEkCPEpqvzzSyvu1dUCyGXkDRg+fLkVZhJ+aHaocr0VZ+aylUkjg2NVjIzqtzy1891yUOHK8SiYw/Ap/p38Yyx0=";
 
     public SettingsPage()
     {
         InitializeComponent();
         LoadSavedProtocol();
+        LoadSavedCredentials();
+    }
+
+    private void LoadSavedCredentials()
+    {
+        entryCashboxId.Text = Preferences.Get(CASHBOX_ID_PREFERENCE_KEY, DEFAULT_CASHBOX_ID);
+        entryAccessToken.Text = Preferences.Get(ACCESS_TOKEN_PREFERENCE_KEY, DEFAULT_ACCESS_TOKEN);
+    }
+
+    private void OnCashboxIdChanged(object? sender, TextChangedEventArgs e)
+    {
+        Preferences.Set(CASHBOX_ID_PREFERENCE_KEY, e.NewTextValue ?? string.Empty);
+    }
+
+    private void OnAccessTokenChanged(object? sender, TextChangedEventArgs e)
+    {
+        Preferences.Set(ACCESS_TOKEN_PREFERENCE_KEY, e.NewTextValue ?? string.Empty);
+    }
+
+    public static string GetCashboxId()
+    {
+        return Preferences.Get(CASHBOX_ID_PREFERENCE_KEY, DEFAULT_CASHBOX_ID);
+    }
+
+    public static string GetAccessToken()
+    {
+        return Preferences.Get(ACCESS_TOKEN_PREFERENCE_KEY, DEFAULT_ACCESS_TOKEN);
     }
 
     private void LoadSavedProtocol()
@@ -84,8 +114,8 @@ public partial class SettingsPage : ContentPage
             : new ComponentName("eu.fiskaltrust.androidlauncher.http", "eu.fiskaltrust.androidlauncher.http.LogContentLinkActivity");
 
         var req = new Intent();
-        req.PutExtra("cashboxid", CASHBOX_ID);
-        req.PutExtra("accesstoken", ACCESS_TOKEN);
+        req.PutExtra("cashboxid", GetCashboxId());
+        req.PutExtra("accesstoken", GetAccessToken());
         req.SetComponent(componentName);
 
         try
