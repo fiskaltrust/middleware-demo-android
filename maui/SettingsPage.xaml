@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="fiskaltrust.Middleware.Demo.SettingsPage"
+             Title="Settings">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <Label Text="Credentials"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   Margin="0,10,0,0"/>
+
+            <Border StrokeThickness="1"
+                    Stroke="LightGray"
+                    BackgroundColor="White"
+                    Padding="15"
+                    Margin="0,0,0,10">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Cashbox ID" FontAttributes="Bold" FontSize="14"/>
+                    <Entry x:Name="entryCashboxId"
+                           Placeholder="00000000-0000-0000-0000-000000000000"
+                           TextChanged="OnCashboxIdChanged"/>
+
+                    <Label Text="Access Token" FontAttributes="Bold" FontSize="14" Margin="0,10,0,0"/>
+                    <Entry x:Name="entryAccessToken"
+                           Placeholder="Access token"
+                           IsPassword="True"
+                           TextChanged="OnAccessTokenChanged"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Communication Protocol"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   Margin="0,10,0,0"/>
+
+            <Border StrokeThickness="1"
+                    Stroke="LightGray"
+                    BackgroundColor="White"
+                    Padding="15"
+                    Margin="0,0,0,10">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="15">
+
+                    <VerticalStackLayout>
+                        <RadioButton x:Name="radioGrpc"
+                                     Content="gRPC"
+                                     GroupName="CommType"
+                                     FontAttributes="Bold"
+                                     FontSize="16"
+                                     CheckedChanged="OnProtocolChanged"/>
+                        <Label Text="Fast binary protocol for high-performance communication"
+                               FontSize="12"
+                               TextColor="Gray"
+                               Margin="30,0,0,0"/>
+                    </VerticalStackLayout>
+
+                    <BoxView Color="LightGray" HeightRequest="1"/>
+
+                    <VerticalStackLayout>
+                        <RadioButton x:Name="radioHttp"
+                                     Content="HTTP/REST"
+                                     GroupName="CommType"
+                                     FontAttributes="Bold"
+                                     FontSize="16"
+                                     CheckedChanged="OnProtocolChanged"/>
+                        <Label Text="Standard HTTP REST API for maximum compatibility"
+                               FontSize="12"
+                               TextColor="Gray"
+                               Margin="30,0,0,0"/>
+                    </VerticalStackLayout>
+
+                    <BoxView Color="LightGray" HeightRequest="1"/>
+
+                    <VerticalStackLayout>
+                        <RadioButton x:Name="radioIntent"
+                                     Content="Intent-based"
+                                     GroupName="CommType"
+                                     FontAttributes="Bold"
+                                     FontSize="16"
+                                     CheckedChanged="OnProtocolChanged"/>
+                        <Label Text="Android Intent system for inter-app communication"
+                               FontSize="12"
+                               TextColor="Gray"
+                               Margin="30,0,0,0"/>
+                    </VerticalStackLayout>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <Border StrokeThickness="1"
+                    Stroke="#E3F2FD"
+                    BackgroundColor="#E3F2FD"
+                    Padding="15"
+                    Margin="0,10,0,0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="ℹ️ About Protocols" FontAttributes="Bold" FontSize="14"/>
+                    <Label FontSize="12" LineBreakMode="WordWrap">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="The selected protocol determines how this app communicates with the fiskaltrust.Middleware service.&#x0a;&#x0a;"/>
+                                <Span Text="Make sure the corresponding launcher app (gRPC or HTTP) is installed and running on your device." FontAttributes="Bold"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Logs Section -->
+            <Label Text="Service Logs"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   Margin="0,30,0,0"/>
+
+            <Border StrokeThickness="1"
+                    Stroke="LightGray"
+                    BackgroundColor="White"
+                    Padding="15"
+                    Margin="0,0,0,10">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Request logs from the middleware service (gRPC/HTTP only)"
+                           FontSize="12"
+                           TextColor="Gray"
+                           LineBreakMode="WordWrap"/>
+                    <Button x:Name="btnGetLogs"
+                            Text="Request Logs"
+                            Clicked="OnRequestLogsClicked"
+                            HorizontalOptions="Fill"/>
+                    <Label x:Name="txtLogs"
+                           Text=""
+                           FontSize="12"
+                           LineBreakMode="WordWrap"/>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

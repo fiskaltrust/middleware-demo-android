@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="fiskaltrust.Middleware.Demo.AboutPage"
+             Title="About">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <!-- App Info -->
+            <VerticalStackLayout Spacing="10">
+                <Label Text="fiskaltrust.Middleware Demo"
+                       FontSize="24"
+                       FontAttributes="Bold"
+                       HorizontalTextAlignment="Center"/>
+                <Label Text="Version 1.0"
+                       FontSize="14"
+                       TextColor="Gray"
+                       HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Description -->
+            <Border StrokeThickness="1"
+                    Stroke="LightGray"
+                    BackgroundColor="White"
+                    Padding="20"
+                    Margin="0,10,0,0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="About This App"
+                           FontSize="18"
+                           FontAttributes="Bold"/>
+                    <Label LineBreakMode="WordWrap" FontSize="14">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="This is a sample application demonstrating the fiskaltrust.Middleware usage on Android."/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Communication Protocols -->
+            <Border StrokeThickness="1"
+                    Stroke="#E3F2FD"
+                    BackgroundColor="#E3F2FD"
+                    Padding="20"
+                    Margin="0,0,0,0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="15">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="📡" FontSize="20" VerticalOptions="Center"/>
+                        <Label Text="Communication Protocols"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                    <Label LineBreakMode="WordWrap" FontSize="14">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="This demo supports three communication protocols:&#x0a;&#x0a;"/>
+                                <Span Text="• gRPC" FontAttributes="Bold"/>
+                                <Span Text=" - Fast binary protocol for high-performance communication&#x0a;"/>
+                                <Span Text="• HTTP/REST" FontAttributes="Bold"/>
+                                <Span Text=" - Standard REST API for maximum compatibility&#x0a;"/>
+                                <Span Text="• Intent-based" FontAttributes="Bold"/>
+                                <Span Text=" - Android Intent system for inter-app communication&#x0a;&#x0a;"/>
+                                <Span Text="Change the protocol in the Settings tab."/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Service Information -->
+            <Border StrokeThickness="1"
+                    Stroke="#FFF3E0"
+                    BackgroundColor="#FFF3E0"
+                    Padding="20"
+                    Margin="0,0,0,0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="15">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="⏱" FontSize="20" VerticalOptions="Center"/>
+                        <Label Text="Service Information"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                    <Label LineBreakMode="WordWrap" FontSize="14">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Starting the service might take up to "/>
+                                <Span Text="45 seconds" FontAttributes="Bold"/>
+                                <Span Text=", depending on the TSE, as it includes a self-test for Swissbit.&#x0a;&#x0a;"/>
+                                <Span Text="The state of the service is displayed in the notification."/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Requirements -->
+            <Border StrokeThickness="1"
+                    Stroke="#E8F5E9"
+                    BackgroundColor="#E8F5E9"
+                    Padding="20"
+                    Margin="0,0,0,10">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="15">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="✓" FontSize="20" VerticalOptions="Center"/>
+                        <Label Text="Requirements"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                    <Label LineBreakMode="WordWrap" FontSize="14">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Make sure the corresponding launcher app ("/>
+                                <Span Text="gRPC" FontAttributes="Bold"/>
+                                <Span Text=" or "/>
+                                <Span Text="HTTP" FontAttributes="Bold"/>
+                                <Span Text=") is installed and running on your device.&#x0a;&#x0a;"/>
+                                <Span Text="Intent-based communication doesn't require a separate launcher app."/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

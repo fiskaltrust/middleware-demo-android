@@ -1,38 +1,43 @@
 ﻿using Android.App;
-using Android.OS;
-using Android.Support.V7.App;
-using Android.Runtime;
-using Android.Widget;
-using System;
 using Android.Content;
-using System.Threading.Tasks;
-using fiskaltrust.Middleware.Interface.Client.Grpc;
+using Android.OS;
+using Android.Runtime;
+using Android.Support.V7.App;
+using Android.Widget;
 using fiskaltrust.ifPOS.v1;
-using Newtonsoft.Json;
+using fiskaltrust.Middleware.Interface.Client.Grpc;
 using fiskaltrust.Middleware.Interface.Client.Http;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace fiskaltrust.Middleware.Demo
 {
+
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
     public class MainActivity : AppCompatActivity
     {
         private const int LOG_REQ_CODE = 1234;
-        
+        const int SignRequest = 1002;
         private const string QUEUE_URL_GRPC = "grpc://localhost:1400";
         private const string QUEUE_URL_REST = "http://localhost:1500/queue";
-        private const string CASHBOX_ID = "<your-cashbox-id>";
-        private const string ACCESS_TOKEN = "<your-access-token>";
+        private const string CASHBOX_ID = "57dd5e04-49b3-4d81-862f-e5ac054117a8";
+        private const string ACCESS_TOKEN = "BEkCPEpqvzzSyvu1dUCyGXkDRg+fLkVZhJ+aHaocr0VZ+aylUkjg2NVjIzqtzy1891yUOHK8SiYw/Ap/p38Yyx0=";
         private const bool SANDBOX = true;
 
         private TaskCompletionSource<string> _getLogsCompletionSource;
+        private POSSystemAPIIntentService _fiskaltrusClient;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
+
+            _fiskaltrusClient = new POSSystemAPIIntentService(Guid.Parse(CASHBOX_ID), ACCESS_TOKEN);
 
             FindViewById<Button>(Resource.Id.btnStartService).Click += new EventHandler((s, e) => ButtonStartServiceOnClick());
             FindViewById<Button>(Resource.Id.btnStopService).Click += new EventHandler((s, e) => ButtonStopServiceOnClick());
@@ -42,6 +47,12 @@ namespace fiskaltrust.Middleware.Demo
             FindViewById<Button>(Resource.Id.btnSendZeroReceipt).Click += new EventHandler(async (s, e) => await ButtonZeroReceiptOnClickAsync());
             FindViewById<Button>(Resource.Id.btnGetLogs).Click += new EventHandler(async (s, e) => await ButtonGetLogsOnClickAsync());
         }
+
+        private bool IsIntentModeSelected()
+        {
+            return FindViewById<RadioButton>(Resource.Id.radioIntent).Checked;
+        }
+
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
         {
             Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -90,9 +101,23 @@ namespace fiskaltrust.Middleware.Demo
 
             try
             {
-                var pos = await GetPOSAsync();
-                var response = await pos.EchoAsync(new EchoRequest { Message = $"Hello Android, it's {DateTime.Now:t}!" });
-                txt.Text = response.Message;
+                if (IsIntentModeSelected())
+                {
+                    // Use FiskaltrusClient for intent-based communication
+                    var message = $"Hello Android via Intent, it's {DateTime.Now:t}!";
+                    var data = await _fiskaltrusClient.SendEchoRequest(this, new EchoRequest
+                    {
+                        Message = message
+                    });
+                    txt.Text = JsonConvert.SerializeObject(data, Formatting.Indented);
+                }
+                else
+                {
+                    // Use existing gRPC/HTTP communication
+                    var pos = await GetPOSAsync();
+                    var response = await pos.EchoAsync(new EchoRequest { Message = $"Hello Android, it's {DateTime.Now:t}!" });
+                    txt.Text = response.Message;
+                }
             }
             catch (Exception ex)
             {
@@ -119,9 +144,19 @@ namespace fiskaltrust.Middleware.Demo
 
             try
             {
-                var pos = await GetPOSAsync();
-                var response = await pos.SignAsync(receiptRequest);
-                txt.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
+                if (IsIntentModeSelected())
+                {
+                    // Use FiskaltrusClient for intent-based communication
+                    var data = await _fiskaltrusClient.SignReceipt(this, receiptRequest);
+                    txt.Text = JsonConvert.SerializeObject(data, Formatting.Indented);
+                }
+                else
+                {
+                    // Use existing gRPC/HTTP communication
+                    var pos = await GetPOSAsync();
+                    var response = await pos.SignAsync(receiptRequest);
+                    txt.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
+                }
             }
             catch (Exception ex)
             {
@@ -155,9 +190,19 @@ namespace fiskaltrust.Middleware.Demo
 
             try
             {
-                var pos = await GetPOSAsync();
-                var response = await pos.SignAsync(receiptRequest);
-                txt.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
+                if (IsIntentModeSelected())
+                {
+                    // Use FiskaltrusClient for intent-based communication
+                    _fiskaltrusClient.SignReceipt(this, receiptRequest);
+
+                }
+                else
+                {
+                    // Use existing gRPC/HTTP communication
+                    var pos = await GetPOSAsync();
+                    var response = await pos.SignAsync(receiptRequest);
+                    txt.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
+                }
             }
             catch (Exception ex)
             {
@@ -191,9 +236,18 @@ namespace fiskaltrust.Middleware.Demo
 
             try
             {
-                var pos = await GetPOSAsync();
-                var response = await pos.SignAsync(receiptRequest);
-                txt.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
+                if (IsIntentModeSelected())
+                {
+                    // Use FiskaltrusClient for intent-based communication
+                    _fiskaltrusClient.SignReceipt(this, receiptRequest);
+                }
+                else
+                {
+                    // Use existing gRPC/HTTP communication
+                    var pos = await GetPOSAsync();
+                    var response = await pos.SignAsync(receiptRequest);
+                    txt.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
+                }
             }
             catch (Exception ex)
             {
@@ -202,7 +256,7 @@ namespace fiskaltrust.Middleware.Demo
 
             SetButtonsEnabled(true);
         }
-        
+
         public async Task ButtonGetLogsOnClickAsync()
         {
             SetButtonsEnabled(false);
@@ -212,7 +266,7 @@ namespace fiskaltrust.Middleware.Demo
             var componentName = FindViewById<RadioButton>(Resource.Id.radioGrpc).Checked
                 ? new ComponentName("eu.fiskaltrust.androidlauncher.grpc", "eu.fiskaltrust.androidlauncher.grpc.LogContentLinkActivity")
                 : new ComponentName("eu.fiskaltrust.androidlauncher.http", "eu.fiskaltrust.androidlauncher.http.LogContentLinkActivity");
-            
+
             var req = new Intent();
             req.PutExtra("cashboxid", CASHBOX_ID);
             req.PutExtra("accesstoken", ACCESS_TOKEN);
@@ -234,10 +288,41 @@ namespace fiskaltrust.Middleware.Demo
             SetButtonsEnabled(true);
         }
 
-        protected override void OnActivityResult(int requestCode, [GeneratedEnum] Result resultCode, Intent data)
+        const int EchoRequest = 1001;
+
+        protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
         {
+            if (SarAwaiter.Complete(requestCode, resultCode, data)) return;
             base.OnActivityResult(requestCode, resultCode, data);
-            if (requestCode == LOG_REQ_CODE && resultCode == Result.Ok && data != null)
+
+            if (requestCode == EchoRequest)
+            {
+                if (resultCode == Result.Ok && data != null)
+                {
+                    var json = data.GetStringExtra("body");
+                    Toast.MakeText(this, json, ToastLength.Long).Show();
+                }
+                else
+                {
+                    Toast.MakeText(this, "Echo request failed or was cancelled", ToastLength.Long).Show();
+                }
+                SetButtonsEnabled(true);
+            }
+            else if (requestCode == SignRequest)
+            {
+                if (resultCode == Result.Ok && data != null)
+                {
+                    var json = data.GetStringExtra("body");
+                    var txt = FindViewById<TextView>(Resource.Id.txtLogs);
+                    txt.Text = json;
+                }
+                else
+                {
+                    Toast.MakeText(this, "Echo request failed or was cancelled", ToastLength.Long).Show();
+                }
+                SetButtonsEnabled(true);
+            }
+            else if (requestCode == LOG_REQ_CODE && resultCode == Result.Ok && data != null)
             {
                 using var str = ContentResolver.OpenInputStream(Android.Net.Uri.Parse(data.DataString));
                 using var sr = new StreamReader(str, Encoding.UTF8);

@@ -30,7 +30,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:text="This demo supports both gRPC and HTTP. We deliver those protocols as separate apps (one for gRPC, one for HTTP) to reduce the respective download sizes.\nPlease select the communication type below before proceeding."
+                android:text="This demo supports gRPC, HTTP, and Intent-based communication. We deliver those protocols as separate apps to reduce the respective download sizes.\nPlease select the communication type below before proceeding."
         />
 
             <RadioGroup
@@ -44,13 +44,19 @@
                     android:layout_height="wrap_content"
                     android:text="gRPC"
                     android:checked="true"
-                    android:layout_marginHorizontal="20dp"/>
+                    android:layout_marginHorizontal="15dp"/>
                 <RadioButton
                     android:id="@+id/radioHttp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="HTTP"
-                    android:layout_marginHorizontal="20dp" />
+                    android:layout_marginHorizontal="15dp" />
+                <RadioButton
+                    android:id="@+id/radioIntent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Intent"
+                    android:layout_marginHorizontal="15dp" />
             </RadioGroup>
             <LinearLayout
                 android:layout_height="wrap_content"

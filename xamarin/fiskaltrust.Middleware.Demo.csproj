@@ -62,8 +62,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainActivity.cs" />
+    <Compile Include="POSSystemAPIIntentService.cs" />
+    <Compile Include="POSSystemAPIRequest.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SarAwaiter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
@@ -101,13 +104,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="fiskaltrust.Middleware.Interface.Client.Grpc">
-      <Version>1.3.3</Version>
+      <Version>1.3.76-rc1-25281-85861</Version>
     </PackageReference>
     <PackageReference Include="fiskaltrust.Middleware.Interface.Client.Http">
-      <Version>1.3.4</Version>
-    </PackageReference>
-    <PackageReference Include="Grpc.Core">
-      <Version>2.31.0</Version>
+      <Version>1.3.76-rc1-25281-85861</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces">
       <Version>1.1.1</Version>
