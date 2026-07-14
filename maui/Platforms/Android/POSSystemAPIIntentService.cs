@@ -48,7 +48,7 @@ namespace fiskaltrust.Middleware.Demo
             return PerformPOSSystemAPIIntent<EchoResponse>(activity, operationId, request);
         }
 
-        public Task<ReceiptResponse> SignReceipt(Activity activity, Guid operationId, ReceiptRequest receipt)
+        public Task<fiskaltrust.ifPOS.v2.ReceiptResponse> SignReceipt(Activity activity, Guid operationId, ReceiptRequest receipt)
         {
             var request = new POSSystemAPIRequest
             {
@@ -63,7 +63,7 @@ namespace fiskaltrust.Middleware.Demo
             {
                 request.Body = null;
             }
-            return PerformPOSSystemAPIIntent<ReceiptResponse>(activity, operationId, request);
+            return PerformPOSSystemAPIIntent<fiskaltrust.ifPOS.v2.ReceiptResponse>(activity, operationId, request);
         }
 
         public Task<PaymentResponse> SendPaymentRequest(Activity activity, Guid operationId, PaymentRequest paymentRequest)
