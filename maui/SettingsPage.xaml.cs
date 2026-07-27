@@ -62,7 +62,11 @@ public partial class SettingsPage : ContentPage
                 radioHttp.IsChecked = true;
                 break;
             case "intent":
-                radioIntent.IsChecked = true;
+            case "intent-activity":
+                radioIntentActivity.IsChecked = true;
+                break;
+            case "intent-service":
+                radioIntentService.IsChecked = true;
                 break;
             default:
                 radioGrpc.IsChecked = true;
@@ -83,9 +87,13 @@ public partial class SettingsPage : ContentPage
             {
                 Preferences.Set(PROTOCOL_PREFERENCE_KEY, "http");
             }
-            else if (radioButton == radioIntent)
+            else if (radioButton == radioIntentActivity)
             {
-                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "intent");
+                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "intent-activity");
+            }
+            else if (radioButton == radioIntentService)
+            {
+                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "intent-service");
             }
         }
     }
@@ -95,12 +103,23 @@ public partial class SettingsPage : ContentPage
         return Preferences.Get(PROTOCOL_PREFERENCE_KEY, "grpc");
     }
 
+    public static bool IsIntentProtocolSelected()
+    {
+        var protocol = GetSelectedProtocol().ToLower();
+        return protocol == "intent" || protocol == "intent-activity" || protocol == "intent-service";
+    }
+
+    public static bool UseBoundServiceForIntent()
+    {
+        return GetSelectedProtocol().ToLower() == "intent-service";
+    }
+
     private async void OnRequestLogsClicked(object? sender, EventArgs e)
     {
 #if ANDROID
-        var protocol = GetSelectedProtocol().ToLower();
+    var protocol = GetSelectedProtocol().ToLower();
 
-        if (protocol == "intent")
+    if (IsIntentProtocolSelected())
         {
             await DisplayAlertAsync("Not Available", "Log retrieval is only available for gRPC and HTTP protocols.", "OK");
             return;

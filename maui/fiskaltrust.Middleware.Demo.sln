@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fiskaltrust.Middleware.Demo", "fiskaltrust.Middleware.Demo.csproj", "{52CEA1A1-C9D9-4D27-8AD5-4F60E96D957D}"
 EndProject
@@ -17,6 +17,7 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{52CEA1A1-C9D9-4D27-8AD5-4F60E96D957D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{52CEA1A1-C9D9-4D27-8AD5-4F60E96D957D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52CEA1A1-C9D9-4D27-8AD5-4F60E96D957D}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{52CEA1A1-C9D9-4D27-8AD5-4F60E96D957D}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{52CEA1A1-C9D9-4D27-8AD5-4F60E96D957D}.Debug|x64.Build.0 = Debug|Any CPU
 		{52CEA1A1-C9D9-4D27-8AD5-4F60E96D957D}.Debug|x86.ActiveCfg = Debug|Any CPU

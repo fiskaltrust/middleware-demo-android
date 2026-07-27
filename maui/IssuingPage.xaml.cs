@@ -61,7 +61,7 @@ public partial class IssuingPage : ContentPage
 #if ANDROID
         if (Guid.TryParse(CASHBOX_ID, out var cashboxGuid))
         {
-            _fiskaltrusClient = new POSSystemAPIIntentService(cashboxGuid, ACCESS_TOKEN);
+            _fiskaltrusClient = new POSSystemAPIIntentService(cashboxGuid, ACCESS_TOKEN, SettingsPage.UseBoundServiceForIntent());
         }
 #endif
         UpdateProtocolDisplay();
@@ -424,7 +424,7 @@ public partial class IssuingPage : ContentPage
 
     private bool IsIntentModeSelected()
     {
-        return SettingsPage.GetSelectedProtocol().ToLower() == "intent";
+        return SettingsPage.IsIntentProtocolSelected();
     }
 
     private bool IsGrpcSelected()

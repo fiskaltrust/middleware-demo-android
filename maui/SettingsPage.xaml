@@ -80,13 +80,28 @@
                     <BoxView Color="LightGray" HeightRequest="1"/>
 
                     <VerticalStackLayout>
-                        <RadioButton x:Name="radioIntent"
-                                     Content="Intent-based"
+                        <RadioButton x:Name="radioIntentActivity"
+                                     Content="Intent (Activity)"
                                      GroupName="CommType"
                                      FontAttributes="Bold"
                                      FontSize="16"
                                      CheckedChanged="OnProtocolChanged"/>
-                        <Label Text="Android Intent system for inter-app communication"
+                        <Label Text="Start launcher PosSystemAPI Activity for request/response"
+                               FontSize="12"
+                               TextColor="Gray"
+                               Margin="30,0,0,0"/>
+                    </VerticalStackLayout>
+
+                    <BoxView Color="LightGray" HeightRequest="1"/>
+
+                    <VerticalStackLayout>
+                        <RadioButton x:Name="radioIntentService"
+                                     Content="Service IPC (Bound)"
+                                     GroupName="CommType"
+                                     FontAttributes="Bold"
+                                     FontSize="16"
+                                     CheckedChanged="OnProtocolChanged"/>
+                        <Label Text="Use bound IPC (Messenger) to call launcher PosSystemAPIService"
                                FontSize="12"
                                TextColor="Gray"
                                Margin="30,0,0,0"/>
@@ -109,7 +124,7 @@
                         <Label.FormattedText>
                             <FormattedString>
                                 <Span Text="The selected protocol determines how this app communicates with the fiskaltrust.Middleware service.&#x0a;&#x0a;"/>
-                                <Span Text="Make sure the corresponding launcher app (gRPC or HTTP) is installed and running on your device." FontAttributes="Bold"/>
+                                <Span Text="For Intent modes, install eu.fiskaltrust.androidlauncher. For gRPC/HTTP, install the matching launcher app." FontAttributes="Bold"/>
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
