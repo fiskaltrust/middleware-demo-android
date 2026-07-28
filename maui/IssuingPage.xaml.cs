@@ -1,6 +1,3 @@
-using fiskaltrust.ifPOS.v1;
-using fiskaltrust.Middleware.Interface.Client.Grpc;
-using fiskaltrust.Middleware.Interface.Client.Http;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
@@ -15,10 +12,6 @@ namespace fiskaltrust.Middleware.Demo;
 
 public partial class IssuingPage : ContentPage
 {
-    private const string QUEUE_URL_GRPC = "grpc://localhost:1400";
-    private const string QUEUE_URL_REST = "http://localhost:1500/queue";
-    private const bool SANDBOX = true;
-
     private static string CASHBOX_ID => SettingsPage.GetCashboxId();
     private static string ACCESS_TOKEN => SettingsPage.GetAccessToken();
 
@@ -61,7 +54,7 @@ public partial class IssuingPage : ContentPage
 #if ANDROID
         if (Guid.TryParse(CASHBOX_ID, out var cashboxGuid))
         {
-            _fiskaltrusClient = new POSSystemAPIIntentService(cashboxGuid, ACCESS_TOKEN, SettingsPage.UseBoundServiceForIntent());
+            _fiskaltrusClient = new POSSystemAPIIntentService(cashboxGuid, ACCESS_TOKEN);
         }
 #endif
         UpdateProtocolDisplay();
@@ -290,8 +283,8 @@ public partial class IssuingPage : ContentPage
     private IssuingRequest CreateIssuingRequest()
     {
         var docType = pickerDocumentType.Items[pickerDocumentType.SelectedIndex];
-        var docNumber = string.IsNullOrWhiteSpace(entryDocumentNumber.Text) 
-            ? $"{docType.ToUpper()}-{DateTime.Now:yyyyMMdd-HHmmss}" 
+        var docNumber = string.IsNullOrWhiteSpace(entryDocumentNumber.Text)
+            ? $"{docType.ToUpper()}-{DateTime.Now:yyyyMMdd-HHmmss}"
             : entryDocumentNumber.Text;
         var customerName = entryCustomerName.Text ?? "";
         var customerId = entryCustomerId.Text ?? "";
@@ -338,117 +331,13 @@ public partial class IssuingPage : ContentPage
 
     private async Task<string> ExecuteIssuingOperationAsync(Guid operationId, OperationType type, IssuingRequest? issuingRequest)
     {
-        var isIntentMode = IsIntentModeSelected();
 
 #if ANDROID
-        if (isIntentMode)
-        {
-            var data = await _fiskaltrusClient!.SendIssuingRequest(Platform.CurrentActivity!, operationId, issuingRequest!);
-            return JsonConvert.SerializeObject(data, Formatting.Indented);
-        }
-        else
+        var data = await _fiskaltrusClient!.SendIssuingRequest(Platform.CurrentActivity!, operationId, issuingRequest!);
+        return JsonConvert.SerializeObject(data, Formatting.Indented);
 #endif
-        {
-            // For now, simulate issuing processing since we don't have direct HTTP/gRPC issuing endpoints
-            // In a real implementation, this would call the actual issuing endpoint
-            var simulatedResponse = type switch
-            {
-                OperationType.IssueDocument => CreateIssuingResponse(issuingRequest!, true, "Document issued successfully."),
-                OperationType.ValidateDocument => CreateValidationResponse(issuingRequest!, true, "Document validation passed."),
-                OperationType.CancelDocument => CreateCancellationResponse(issuingRequest!, true, "Document cancelled successfully."),
-                _ => throw new ArgumentException("Unknown operation type")
-            };
-
-            // Store the last issued document ID for cancellation
-            if (type == OperationType.IssueDocument && simulatedResponse.Success)
-            {
-                _lastIssuedDocumentId = simulatedResponse.DocumentId;
-            }
-
-            return JsonConvert.SerializeObject(simulatedResponse, Formatting.Indented);
-        }
     }
 
-    private IssuingResponse CreateIssuingResponse(IssuingRequest request, bool success, string message)
-    {
-        return new IssuingResponse
-        {
-            Success = success,
-            DocumentId = request.DocumentNumber,
-            DocumentType = request.DocumentType,
-            Amount = request.Amount,
-            Currency = request.Currency,
-            CustomerName = request.CustomerName,
-            CustomerId = request.CustomerId,
-            Timestamp = DateTime.UtcNow,
-            Message = message,
-            FiscalReference = $"FR-{DateTime.Now:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..8]}"
-        };
-    }
-
-    private IssuingResponse CreateValidationResponse(IssuingRequest request, bool success, string message)
-    {
-        return new IssuingResponse
-        {
-            Success = success,
-            DocumentId = request.DocumentNumber,
-            DocumentType = request.DocumentType,
-            Amount = request.Amount,
-            Currency = request.Currency,
-            CustomerName = request.CustomerName,
-            CustomerId = request.CustomerId,
-            Timestamp = DateTime.UtcNow,
-            Message = message,
-            ValidationDetails = new()
-            {
-                ["DocumentFormat"] = "Valid",
-                ["CustomerData"] = "Valid",
-                ["AmountFormat"] = "Valid",
-                ["TaxCalculation"] = "Valid"
-            }
-        };
-    }
-
-    private IssuingResponse CreateCancellationResponse(IssuingRequest request, bool success, string message)
-    {
-        return new IssuingResponse
-        {
-            Success = success,
-            DocumentId = request.DocumentNumber,
-            DocumentType = "Cancellation",
-            Timestamp = DateTime.UtcNow,
-            Message = message,
-            OriginalDocumentId = request.DocumentNumber
-        };
-    }
-
-    private bool IsIntentModeSelected()
-    {
-        return SettingsPage.IsIntentProtocolSelected();
-    }
-
-    private bool IsGrpcSelected()
-    {
-        return SettingsPage.GetSelectedProtocol().ToLower() == "grpc";
-    }
-
-    private async Task<IPOS> GetPOSAsync()
-    {
-        if (IsGrpcSelected())
-        {
-            return await GrpcPosFactory.CreatePosAsync(new GrpcClientOptions
-            {
-                Url = new Uri(QUEUE_URL_GRPC)
-            });
-        }
-        else
-        {
-            return await HttpPosFactory.CreatePosAsync(new HttpPosClientOptions
-            {
-                Url = new Uri(QUEUE_URL_REST)
-            });
-        }
-    }
 
     private void SetButtonsEnabled(bool state)
     {

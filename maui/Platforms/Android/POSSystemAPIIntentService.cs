@@ -2,12 +2,18 @@ using Android.App;
 using Android.Content;
 using Android.OS;
 using fiskaltrust.AndroidLauncher.AndroidService;
-using fiskaltrust.ifPOS.v1;
+using fiskaltrust.ifPOS.v2;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+
+#if ANDROID
+using Android.Content;
+using Android.Widget;
+using Platform = Microsoft.Maui.ApplicationModel.Platform;
+#endif
 
 namespace fiskaltrust.Middleware.Demo
 {
@@ -23,13 +29,12 @@ namespace fiskaltrust.Middleware.Demo
 
         private Guid _cashBoxId;
         private string _accessToken;
-        private readonly bool _useBoundService;
+        private bool _useBoundService { get => SettingsPage.GetSelectedProtocol() == "intent-service"; }
 
-        public POSSystemAPIIntentService(Guid cashBoxId, string accessToken, bool useBoundService = false)
+        public POSSystemAPIIntentService(Guid cashBoxId, string accessToken)
         {
             _cashBoxId = cashBoxId;
             _accessToken = accessToken;
-            _useBoundService = useBoundService;
         }
 
         public Task<EchoResponse> SendEchoRequest(Activity activity, Guid operationId, EchoRequest echoRequest)
@@ -42,7 +47,7 @@ namespace fiskaltrust.Middleware.Demo
                 Body = JsonConvert.SerializeObject(echoRequest),
                 RequestId = new Guid().ToString()
             };
-            if(echoRequest == null)
+            if (echoRequest == null)
             {
                 request.Body = null;
             }

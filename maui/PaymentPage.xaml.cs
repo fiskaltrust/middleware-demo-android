@@ -1,6 +1,4 @@
-﻿using fiskaltrust.ifPOS.v1;
-using fiskaltrust.Middleware.Interface.Client.Grpc;
-using fiskaltrust.Middleware.Interface.Client.Http;
+﻿using fiskaltrust.ifPOS.v2;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
@@ -15,8 +13,6 @@ namespace fiskaltrust.Middleware.Demo;
 
 public partial class PaymentPage : ContentPage
 {
-    private const string QUEUE_URL_GRPC = "grpc://localhost:1400";
-    private const string QUEUE_URL_REST = "http://localhost:1500/queue";
     private const bool SANDBOX = true;
 
     private static string CASHBOX_ID => SettingsPage.GetCashboxId();
@@ -54,7 +50,7 @@ public partial class PaymentPage : ContentPage
 #if ANDROID
         if (Guid.TryParse(CASHBOX_ID, out var cashboxGuid))
         {
-            _fiskaltrusClient = new POSSystemAPIIntentService(cashboxGuid, ACCESS_TOKEN, SettingsPage.UseBoundServiceForIntent());
+            _fiskaltrusClient = new POSSystemAPIIntentService(cashboxGuid, ACCESS_TOKEN);
         }
 #endif
         UpdateProtocolDisplay();
@@ -168,48 +164,12 @@ public partial class PaymentPage : ContentPage
 
     private async Task<string> ExecutePaymentOperationAsync(Guid operationId, PaymentRequest paymentRequest)
     {
-        var isIntentMode = IsIntentModeSelected();
-
 #if ANDROID
-        if (isIntentMode)
-        {
-            var data = await _fiskaltrusClient!.SendPaymentRequest(Platform.CurrentActivity!, operationId, paymentRequest);
-            return JsonConvert.SerializeObject(data, Formatting.Indented);
-        }
-        else
+        var data = await _fiskaltrusClient!.SendPaymentRequest(Platform.CurrentActivity!, operationId, paymentRequest);
+        return JsonConvert.SerializeObject(data, Formatting.Indented);
 #endif
-        {
-            throw new NotSupportedException();
-        }
     }
 
-    private bool IsIntentModeSelected()
-    {
-        return SettingsPage.IsIntentProtocolSelected();
-    }
-
-    private bool IsGrpcSelected()
-    {
-        return SettingsPage.GetSelectedProtocol().ToLower() == "grpc";
-    }
-
-    private async Task<IPOS> GetPOSAsync()
-    {
-        if (IsGrpcSelected())
-        {
-            return await GrpcPosFactory.CreatePosAsync(new GrpcClientOptions
-            {
-                Url = new Uri(QUEUE_URL_GRPC)
-            });
-        }
-        else
-        {
-            return await HttpPosFactory.CreatePosAsync(new HttpPosClientOptions
-            {
-                Url = new Uri(QUEUE_URL_REST)
-            });
-        }
-    }
 
     private void SetButtonsEnabled(bool state)
     {
@@ -256,7 +216,7 @@ public class PaymentRequest
     public string Action { get; set; } = string.Empty;
     public string Protocol { get; set; } = string.Empty;
 
-    public PayItem cbPayItem { get; set; } 
+    public PayItem cbPayItem { get; set; }
 }
 
 public class PaymentResponse

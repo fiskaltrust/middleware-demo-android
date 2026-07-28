@@ -5,13 +5,18 @@
              Title="Payment Operations">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15">
+        <VerticalStackLayout Padding="20"
+                Spacing="15">
 
             <!-- Current Protocol Display -->
-            <HorizontalStackLayout HorizontalOptions="Center" Spacing="8" Margin="0,0,0,15">
-                <Label Text="Protocol:" FontAttributes="Bold" VerticalOptions="Center"/>
+            <HorizontalStackLayout HorizontalOptions="Center"
+                    Spacing="8"
+                    Margin="0,0,0,15">
+                <Label Text="Protocol:"
+                        FontAttributes="Bold"
+                        VerticalOptions="Center"/>
                 <Label x:Name="lblCurrentProtocol"
-                       Text="gRPC"
+                       Text=""
                        TextColor="#2196F3"
                        FontAttributes="Bold"
                        VerticalOptions="Center"/>
@@ -28,34 +33,38 @@
                     BackgroundColor="#4CAF50"
                     TextColor="White"
                     IsVisible="False"
-                    Margin="0,0,0,10" />
+                    Margin="0,0,0,10"/>
 
             <!-- Payment Section -->
-            <Frame BackgroundColor="#F8F9FA" Padding="15" CornerRadius="8">
+            <Frame BackgroundColor="#F8F9FA"
+                    Padding="15"
+                    CornerRadius="8">
                 <VerticalStackLayout Spacing="15">
                     <Label Text="?? Payment Operations"
                            FontSize="18"
                            FontAttributes="Bold"
                            TextColor="#2196F3"
-                           HorizontalOptions="Center" />
+                           HorizontalOptions="Center"/>
 
                     <!-- Payment Amount Input -->
                     <StackLayout>
-                        <Label Text="Payment Amount:" FontAttributes="Bold" />
+                        <Label Text="Payment Amount:"
+                                FontAttributes="Bold"/>
                         <Entry x:Name="entryPaymentAmount"
                                Placeholder="Enter amount (e.g., 10.50)"
                                Keyboard="Numeric"
-                               Text="10.50" />
+                               Text="10.50"/>
                     </StackLayout>
 
                     <!-- Payment Action Display -->
                     <StackLayout>
-                        <Label Text="Action:" FontAttributes="Bold" />
+                        <Label Text="Action:"
+                                FontAttributes="Bold"/>
                         <Label Text="use_auto"
                                FontFamily="Courier"
                                BackgroundColor="#E8F5E8"
                                Padding="8"
-                               TextColor="#2E7D32" />
+                               TextColor="#2E7D32"/>
                     </StackLayout>
 
                     <!-- Payment Buttons -->
@@ -65,25 +74,28 @@
                                 Clicked="OnSendPaymentClicked"
                                 BackgroundColor="#4CAF50"
                                 TextColor="White"
-                                HorizontalOptions="FillAndExpand" />
+                                HorizontalOptions="FillAndExpand"/>
                         <Button x:Name="btnClearPaymentForm"
                                 Text="Clear Form"
                                 Clicked="OnClearPaymentFormClicked"
                                 BackgroundColor="#9E9E9E"
                                 TextColor="White"
-                                HorizontalOptions="FillAndExpand" />
+                                HorizontalOptions="FillAndExpand"/>
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Frame>
 
             <!-- Payment Result Section -->
             <StackLayout>
-                <Label Text="Payment Result:" FontAttributes="Bold" />
-                <Frame BackgroundColor="#FAFAFA" Padding="10" CornerRadius="5">
+                <Label Text="Payment Result:"
+                        FontAttributes="Bold"/>
+                <Frame BackgroundColor="#FAFAFA"
+                        Padding="10"
+                        CornerRadius="5">
                     <Label x:Name="lblPaymentResult"
                            Text="No payment operations performed yet."
                            FontFamily="Courier"
-                           FontSize="12" />
+                           FontSize="12"/>
                 </Frame>
             </StackLayout>
 
