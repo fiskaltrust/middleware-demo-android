@@ -6,12 +6,26 @@ using Platform = Microsoft.Maui.ApplicationModel.Platform;
 
 namespace fiskaltrust.Middleware.Demo.Platforms.Android
 {
-    public class BoundServiceTransport : IPosSystemTransport
+    public class BoundServiceTransport : IPosSystemTransport, IDisposable
     {
+        private readonly Context _context;
+        private readonly SemaphoreSlim _connectionGate = new SemaphoreSlim(1, 1);
+
+        private BoundServiceConnection? _connection;
+        private Messenger? _serviceMessenger;
+        private bool _disposed;
+
+        public BoundServiceTransport()
+        {
+            _context = Platform.CurrentActivity?.ApplicationContext
+                ?? throw new InvalidOperationException("Current Android activity context is not available.");
+        }
+
         public async Task<PosSystemApiResponse> SendAsync(RequestInfo requestInfo)
         {
-            using var connection = new BoundServiceConnection(Platform.CurrentActivity!.ApplicationContext!);
-            var serviceMessenger = await connection.BindAsync();
+            ThrowIfDisposed();
+
+            var (connection, serviceMessenger) = await EnsureConnectedAsync();
 
             var correlationId = Guid.NewGuid().ToString();
             var replyTask = connection.WaitForReplyAsync(correlationId);
@@ -29,15 +43,99 @@ namespace fiskaltrust.Middleware.Demo.Platforms.Android
                 msg.Data.PutString(PosSystemApiServiceContract.KeyBodyBase64Url, requestInfo.BodyB64);
             }
 
-            serviceMessenger.Send(msg);
+            try
+            {
+                serviceMessenger.Send(msg);
+            }
+            catch
+            {
+                connection.CancelPending(correlationId, new InvalidOperationException("Failed to send request to PosSystemAPIService."));
+                await ResetConnectionAsync();
+                throw;
+            }
+
             var completedTask = await Task.WhenAny(replyTask, Task.Delay(TimeSpan.FromSeconds(30)));
             if (completedTask != replyTask)
             {
+                connection.CancelPending(correlationId, new TimeoutException("Timed out waiting for PosSystemAPIService reply."));
+                await ResetConnectionAsync();
                 throw new TimeoutException("Timed out waiting for PosSystemAPIService reply.");
             }
 
             return await replyTask;
         }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            _connection?.Dispose();
+            _connection = null;
+            _serviceMessenger = null;
+            _connectionGate.Dispose();
+        }
+
+        private async Task<(BoundServiceConnection connection, Messenger messenger)> EnsureConnectedAsync()
+        {
+            if (_connection != null && _serviceMessenger != null)
+            {
+                return (_connection, _serviceMessenger);
+            }
+
+            await _connectionGate.WaitAsync();
+            try
+            {
+                ThrowIfDisposed();
+
+                if (_connection != null && _serviceMessenger != null)
+                {
+                    return (_connection, _serviceMessenger);
+                }
+
+                _connection = new BoundServiceConnection(_context);
+                _serviceMessenger = await _connection.BindAsync();
+                return (_connection, _serviceMessenger);
+            }
+            catch
+            {
+                _connection?.Dispose();
+                _connection = null;
+                _serviceMessenger = null;
+                throw;
+            }
+            finally
+            {
+                _connectionGate.Release();
+            }
+        }
+
+        private async Task ResetConnectionAsync()
+        {
+            await _connectionGate.WaitAsync();
+            try
+            {
+                _connection?.Dispose();
+                _connection = null;
+                _serviceMessenger = null;
+            }
+            finally
+            {
+                _connectionGate.Release();
+            }
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(BoundServiceTransport));
+            }
+        }
+
         private sealed class BoundServiceConnection : Java.Lang.Object, IServiceConnection, IDisposable
         {
             private readonly Context _context;
@@ -78,6 +176,18 @@ namespace fiskaltrust.Middleware.Demo.Platforms.Android
                     _pendingReplies[correlationId] = tcs;
                 }
                 return tcs.Task;
+            }
+
+            public void CancelPending(string correlationId, Exception exception)
+            {
+                lock (_sync)
+                {
+                    if (_pendingReplies.TryGetValue(correlationId, out var pending))
+                    {
+                        _pendingReplies.Remove(correlationId);
+                        pending.TrySetException(exception);
+                    }
+                }
             }
 
             public void OnServiceConnected(ComponentName? name, IBinder? service)
