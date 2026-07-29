@@ -53,15 +53,7 @@ namespace fiskaltrust.Middleware.Demo.Platforms.Android
                 await ResetConnectionAsync();
                 throw;
             }
-
-            var completedTask = await Task.WhenAny(replyTask, Task.Delay(TimeSpan.FromSeconds(30)));
-            if (completedTask != replyTask)
-            {
-                connection.CancelPending(correlationId, new TimeoutException("Timed out waiting for PosSystemAPIService reply."));
-                await ResetConnectionAsync();
-                throw new TimeoutException("Timed out waiting for PosSystemAPIService reply.");
-            }
-
+            
             return await replyTask;
         }
 
