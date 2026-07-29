@@ -23,7 +23,7 @@ public partial class PaymentPage : ContentPage
     private static string ACCESS_TOKEN => SettingsPage.GetAccessToken();
 
 #if ANDROID
-    private POSSystemAPIIntentService? _fiskaltrusClient;
+    private POSSystemAPIService? _fiskaltrusClient;
 #endif
 
     // Last operation tracking
@@ -54,7 +54,7 @@ public partial class PaymentPage : ContentPage
 #if ANDROID
         if (Guid.TryParse(CASHBOX_ID, out var cashboxGuid))
         {
-            _fiskaltrusClient = new POSSystemAPIIntentService(cashboxGuid, ACCESS_TOKEN, SettingsPage.UseBoundServiceForIntent());
+            _fiskaltrusClient = new POSSystemAPIService(cashboxGuid, ACCESS_TOKEN, SettingsPage.UseBoundServiceForIntent());
         }
 #endif
         UpdateProtocolDisplay();
