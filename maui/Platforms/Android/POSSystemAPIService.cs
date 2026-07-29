@@ -1,5 +1,5 @@
 using Android.App;
-using fiskaltrust.ifPOS.v1;
+using fiskaltrust.ifPOS.v2;
 using fiskaltrust.Middleware.Demo.Models;
 using fiskaltrust.Middleware.Demo.Platforms.Android;
 using Newtonsoft.Json;
@@ -19,12 +19,11 @@ namespace fiskaltrust.Middleware.Demo
         private string _accessToken;
         private readonly IPosSystemTransport _intentService;
 
-
-        public POSSystemAPIService(Guid cashBoxId, string accessToken, bool useBoundService = false)
+        public POSSystemAPIService(Guid cashBoxId, string accessToken)
         {
             _cashBoxId = cashBoxId;
             _accessToken = accessToken;
-            _intentService = PosSystemTransportFactory.GetInstance(useBoundService);
+            _intentService = PosSystemTransportFactory.GetInstance(SettingsPage.GetSelectedProtocol() == "intent-service");
         }
 
         public Task<EchoResponse> SendEchoRequest(Activity activity, Guid operationId, EchoRequest echoRequest)

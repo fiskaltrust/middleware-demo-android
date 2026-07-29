@@ -54,7 +54,7 @@ public partial class IssuingPage : ContentPage
 #if ANDROID
         if (Guid.TryParse(CASHBOX_ID, out var cashboxGuid))
         {
-            _fiskaltrusClient = new POSSystemAPIService(cashboxGuid, ACCESS_TOKEN, SettingsPage.UseBoundServiceForIntent());
+            _fiskaltrusClient = new POSSystemAPIService(cashboxGuid, ACCESS_TOKEN);
         }
 #endif
         UpdateProtocolDisplay();
