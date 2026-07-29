@@ -5,13 +5,18 @@
              Title="Issuing Operations">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15">
+        <VerticalStackLayout Padding="20"
+                Spacing="15">
 
             <!-- Current Protocol Display -->
-            <HorizontalStackLayout HorizontalOptions="Center" Spacing="8" Margin="0,0,0,15">
-                <Label Text="Protocol:" FontAttributes="Bold" VerticalOptions="Center"/>
+            <HorizontalStackLayout HorizontalOptions="Center"
+                    Spacing="8"
+                    Margin="0,0,0,15">
+                <Label Text="Protocol:"
+                        FontAttributes="Bold"
+                        VerticalOptions="Center"/>
                 <Label x:Name="lblCurrentProtocol"
-                       Text="gRPC"
+                       Text=""
                        TextColor="#2196F3"
                        FontAttributes="Bold"
                        VerticalOptions="Center"/>
@@ -28,20 +33,23 @@
                     BackgroundColor="#4CAF50"
                     TextColor="White"
                     IsVisible="False"
-                    Margin="0,0,0,10" />
+                    Margin="0,0,0,10"/>
 
             <!-- Issuing Section -->
-            <Frame BackgroundColor="#F8F9FA" Padding="15" CornerRadius="8">
+            <Frame BackgroundColor="#F8F9FA"
+                    Padding="15"
+                    CornerRadius="8">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="?? Document Issuing Operations"
                            FontSize="18"
                            FontAttributes="Bold"
                            TextColor="#2196F3"
-                           HorizontalOptions="Center" />
+                           HorizontalOptions="Center"/>
 
                     <!-- Document Type Selection -->
                     <StackLayout>
-                        <Label Text="Document Type:" FontAttributes="Bold" />
+                        <Label Text="Document Type:"
+                                FontAttributes="Bold"/>
                         <Picker x:Name="pickerDocumentType">
                             <Picker.Items>
                                 <x:String>Invoice</x:String>
@@ -55,37 +63,42 @@
 
                     <!-- Document Number Input -->
                     <StackLayout>
-                        <Label Text="Document Number:" FontAttributes="Bold" />
+                        <Label Text="Document Number:"
+                                FontAttributes="Bold"/>
                         <Entry x:Name="entryDocumentNumber"
-                               Placeholder="Enter document number (auto-generated if empty)" />
+                               Placeholder="Enter document number (auto-generated if empty)"/>
                     </StackLayout>
 
                     <!-- Customer Info -->
                     <StackLayout>
-                        <Label Text="Customer Name:" FontAttributes="Bold" />
+                        <Label Text="Customer Name:"
+                                FontAttributes="Bold"/>
                         <Entry x:Name="entryCustomerName"
                                Placeholder="Enter customer name"
-                               Text="Sample Customer" />
+                               Text="Sample Customer"/>
                     </StackLayout>
 
                     <StackLayout>
-                        <Label Text="Customer ID:" FontAttributes="Bold" />
+                        <Label Text="Customer ID:"
+                                FontAttributes="Bold"/>
                         <Entry x:Name="entryCustomerId"
-                               Placeholder="Optional customer ID" />
+                               Placeholder="Optional customer ID"/>
                     </StackLayout>
 
                     <!-- Document Amount -->
                     <StackLayout>
-                        <Label Text="Total Amount:" FontAttributes="Bold" />
+                        <Label Text="Total Amount:"
+                                FontAttributes="Bold"/>
                         <Entry x:Name="entryDocumentAmount"
                                Placeholder="Enter total amount (e.g., 100.50)"
                                Keyboard="Numeric"
-                               Text="50.00" />
+                               Text="50.00"/>
                     </StackLayout>
 
                     <!-- Currency Selection -->
                     <StackLayout>
-                        <Label Text="Currency:" FontAttributes="Bold" />
+                        <Label Text="Currency:"
+                                FontAttributes="Bold"/>
                         <Picker x:Name="pickerCurrency">
                             <Picker.Items>
                                 <x:String>EUR</x:String>
@@ -98,11 +111,12 @@
 
                     <!-- Description -->
                     <StackLayout>
-                        <Label Text="Description:" FontAttributes="Bold" />
+                        <Label Text="Description:"
+                                FontAttributes="Bold"/>
                         <Editor x:Name="editorDescription"
                                 Placeholder="Enter document description"
                                 Text="Sample document description"
-                                HeightRequest="80" />
+                                HeightRequest="80"/>
                     </StackLayout>
 
                     <!-- Issue Buttons -->
@@ -112,36 +126,41 @@
                                 Clicked="OnIssueDocumentClicked"
                                 BackgroundColor="#2196F3"
                                 TextColor="White"
-                                HorizontalOptions="FillAndExpand" />
+                                HorizontalOptions="FillAndExpand"/>
                         <Button x:Name="btnClearIssuingForm"
                                 Text="Clear Form"
                                 Clicked="OnClearIssuingFormClicked"
                                 BackgroundColor="#9E9E9E"
                                 TextColor="White"
-                                HorizontalOptions="FillAndExpand" />
+                                HorizontalOptions="FillAndExpand"/>
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Frame>
 
             <!-- Issuing Result Section -->
             <StackLayout>
-                <Label Text="Issuing Result:" FontAttributes="Bold" />
-                <Frame BackgroundColor="#FAFAFA" Padding="10" CornerRadius="5">
+                <Label Text="Issuing Result:"
+                        FontAttributes="Bold"/>
+                <Frame BackgroundColor="#FAFAFA"
+                        Padding="10"
+                        CornerRadius="5">
                     <Label x:Name="lblIssuingResult"
                            Text="No issuing operations performed yet."
                            FontFamily="Courier"
-                           FontSize="12" />
+                           FontSize="12"/>
                 </Frame>
             </StackLayout>
 
             <!-- Sample Issuing Buttons -->
-            <Frame BackgroundColor="#E8F5E8" Padding="15" CornerRadius="8">
+            <Frame BackgroundColor="#E8F5E8"
+                    Padding="15"
+                    CornerRadius="8">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="?? Quick Document Examples"
                            FontSize="16"
                            FontAttributes="Bold"
                            TextColor="#388E3C"
-                           HorizontalOptions="Center" />
+                           HorizontalOptions="Center"/>
 
                     <HorizontalStackLayout Spacing="10">
                         <Button x:Name="btnSampleInvoice"
@@ -149,13 +168,13 @@
                                 Clicked="OnSampleInvoiceClicked"
                                 BackgroundColor="#4CAF50"
                                 TextColor="White"
-                                HorizontalOptions="FillAndExpand" />
+                                HorizontalOptions="FillAndExpand"/>
                         <Button x:Name="btnSampleReceipt"
                                 Text="Sample Receipt"
                                 Clicked="OnSampleReceiptClicked"
                                 BackgroundColor="#FF5722"
                                 TextColor="White"
-                                HorizontalOptions="FillAndExpand" />
+                                HorizontalOptions="FillAndExpand"/>
                     </HorizontalStackLayout>
 
                     <HorizontalStackLayout Spacing="10">
@@ -164,25 +183,27 @@
                                 Clicked="OnSampleCreditNoteClicked"
                                 BackgroundColor="#FF9800"
                                 TextColor="White"
-                                HorizontalOptions="FillAndExpand" />
+                                HorizontalOptions="FillAndExpand"/>
                         <Button x:Name="btnSampleQuote"
                                 Text="Sample Quote"
                                 Clicked="OnSampleQuoteClicked"
                                 BackgroundColor="#673AB7"
                                 TextColor="White"
-                                HorizontalOptions="FillAndExpand" />
+                                HorizontalOptions="FillAndExpand"/>
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Frame>
 
             <!-- Additional Features -->
-            <Frame BackgroundColor="#FFF3E0" Padding="15" CornerRadius="8">
+            <Frame BackgroundColor="#FFF3E0"
+                    Padding="15"
+                    CornerRadius="8">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="?? Additional Operations"
                            FontSize="16"
                            FontAttributes="Bold"
                            TextColor="#F57C00"
-                           HorizontalOptions="Center" />
+                           HorizontalOptions="Center"/>
 
                     <HorizontalStackLayout Spacing="10">
                         <Button x:Name="btnValidateDocument"
@@ -190,13 +211,13 @@
                                 Clicked="OnValidateDocumentClicked"
                                 BackgroundColor="#3F51B5"
                                 TextColor="White"
-                                HorizontalOptions="FillAndExpand" />
+                                HorizontalOptions="FillAndExpand"/>
                         <Button x:Name="btnCancelDocument"
                                 Text="Cancel Last Document"
                                 Clicked="OnCancelDocumentClicked"
                                 BackgroundColor="#F44336"
                                 TextColor="White"
-                                HorizontalOptions="FillAndExpand" />
+                                HorizontalOptions="FillAndExpand"/>
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Frame>

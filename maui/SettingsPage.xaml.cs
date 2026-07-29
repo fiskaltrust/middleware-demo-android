@@ -51,16 +51,10 @@ public partial class SettingsPage : ContentPage
 
     private void LoadSavedProtocol()
     {
-        var savedProtocol = Preferences.Get(PROTOCOL_PREFERENCE_KEY, "grpc");
+        var savedProtocol = Preferences.Get(PROTOCOL_PREFERENCE_KEY, "intent-activity");
 
         switch (savedProtocol.ToLower())
         {
-            case "grpc":
-                radioGrpc.IsChecked = true;
-                break;
-            case "http":
-                radioHttp.IsChecked = true;
-                break;
             case "intent":
             case "intent-activity":
                 radioIntentActivity.IsChecked = true;
@@ -69,7 +63,7 @@ public partial class SettingsPage : ContentPage
                 radioIntentService.IsChecked = true;
                 break;
             default:
-                radioGrpc.IsChecked = true;
+                radioIntentActivity.IsChecked = true;
                 break;
         }
     }
@@ -79,15 +73,7 @@ public partial class SettingsPage : ContentPage
         if (e.Value)
         {
             var radioButton = sender as RadioButton;
-            if (radioButton == radioGrpc)
-            {
-                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "grpc");
-            }
-            else if (radioButton == radioHttp)
-            {
-                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "http");
-            }
-            else if (radioButton == radioIntentActivity)
+            if (radioButton == radioIntentActivity)
             {
                 Preferences.Set(PROTOCOL_PREFERENCE_KEY, "intent-activity");
             }
@@ -100,56 +86,6 @@ public partial class SettingsPage : ContentPage
 
     public static string GetSelectedProtocol()
     {
-        return Preferences.Get(PROTOCOL_PREFERENCE_KEY, "grpc");
-    }
-
-    public static bool IsIntentProtocolSelected()
-    {
-        var protocol = GetSelectedProtocol().ToLower();
-        return protocol == "intent" || protocol == "intent-activity" || protocol == "intent-service";
-    }
-
-    public static bool UseBoundServiceForIntent()
-    {
-        return GetSelectedProtocol().ToLower() == "intent-service";
-    }
-
-    private async void OnRequestLogsClicked(object? sender, EventArgs e)
-    {
-#if ANDROID
-    var protocol = GetSelectedProtocol().ToLower();
-
-    if (IsIntentProtocolSelected())
-        {
-            await DisplayAlertAsync("Not Available", "Log retrieval is only available for gRPC and HTTP protocols.", "OK");
-            return;
-        }
-
-        btnGetLogs.IsEnabled = false;
-        txtLogs.Text = "Requesting logs...";
-
-        var componentName = protocol == "grpc"
-            ? new ComponentName("eu.fiskaltrust.androidlauncher.grpc", "eu.fiskaltrust.androidlauncher.grpc.LogContentLinkActivity")
-            : new ComponentName("eu.fiskaltrust.androidlauncher.http", "eu.fiskaltrust.androidlauncher.http.LogContentLinkActivity");
-
-        var req = new Intent();
-        req.PutExtra("cashboxid", GetCashboxId());
-        req.PutExtra("accesstoken", GetAccessToken());
-        req.SetComponent(componentName);
-
-        try
-        {
-            Platform.CurrentActivity?.StartActivity(req);
-            txtLogs.Text = "Log request sent. Please check the launcher app for logs.";
-        }
-        catch (Exception ex)
-        {
-            txtLogs.Text = $"Error requesting logs: {ex.Message}";
-        }
-
-        btnGetLogs.IsEnabled = true;
-#else
-        await DisplayAlertAsync("Not Available", "This feature is only available on Android.", "OK");
-#endif
+        return Preferences.Get(PROTOCOL_PREFERENCE_KEY, "intent-activity");
     }
 }

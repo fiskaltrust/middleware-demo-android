@@ -5,7 +5,8 @@
              Title="About">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="20">
+        <VerticalStackLayout Padding="20"
+                             Spacing="20">
 
             <!-- App Info -->
             <VerticalStackLayout Spacing="10">
@@ -32,7 +33,8 @@
                     <Label Text="About This App"
                            FontSize="18"
                            FontAttributes="Bold"/>
-                    <Label LineBreakMode="WordWrap" FontSize="14">
+                    <Label LineBreakMode="WordWrap"
+                           FontSize="14">
                         <Label.FormattedText>
                             <FormattedString>
                                 <Span Text="This is a sample application demonstrating the fiskaltrust.Middleware usage on Android."/>
@@ -53,22 +55,25 @@
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="15">
                     <HorizontalStackLayout Spacing="8">
-                        <Label Text="📡" FontSize="20" VerticalOptions="Center"/>
+                        <Label Text="📡"
+                               FontSize="20"
+                               VerticalOptions="Center"/>
                         <Label Text="Communication Protocols"
                                FontSize="18"
                                FontAttributes="Bold"
                                VerticalOptions="Center"/>
                     </HorizontalStackLayout>
-                    <Label LineBreakMode="WordWrap" FontSize="14">
+                    <Label LineBreakMode="WordWrap"
+                           FontSize="14">
                         <Label.FormattedText>
                             <FormattedString>
-                                <Span Text="This demo supports three communication protocols:&#x0a;&#x0a;"/>
-                                <Span Text="• gRPC" FontAttributes="Bold"/>
-                                <Span Text=" - Fast binary protocol for high-performance communication&#x0a;"/>
-                                <Span Text="• HTTP/REST" FontAttributes="Bold"/>
-                                <Span Text=" - Standard REST API for maximum compatibility&#x0a;"/>
-                                <Span Text="• Intent-based" FontAttributes="Bold"/>
+                                <Span Text="This demo supports two communication protocols:&#x0a;&#x0a;"/>
+                                <Span Text="• Intent-based"
+                                      FontAttributes="Bold"/>
                                 <Span Text=" - Android Intent system for inter-app communication&#x0a;&#x0a;"/>
+                                <Span Text="• Message-based"
+                                      FontAttributes="Bold"/>
+                                <Span Text=" - Android Bound Service using Messages for inter-app communication&#x0a;&#x0a;"/>
                                 <Span Text="Change the protocol in the Settings tab."/>
                             </FormattedString>
                         </Label.FormattedText>
@@ -87,17 +92,21 @@
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="15">
                     <HorizontalStackLayout Spacing="8">
-                        <Label Text="⏱" FontSize="20" VerticalOptions="Center"/>
+                        <Label Text="⏱"
+                               FontSize="20"
+                               VerticalOptions="Center"/>
                         <Label Text="Service Information"
                                FontSize="18"
                                FontAttributes="Bold"
                                VerticalOptions="Center"/>
                     </HorizontalStackLayout>
-                    <Label LineBreakMode="WordWrap" FontSize="14">
+                    <Label LineBreakMode="WordWrap"
+                           FontSize="14">
                         <Label.FormattedText>
                             <FormattedString>
                                 <Span Text="Starting the service might take up to "/>
-                                <Span Text="45 seconds" FontAttributes="Bold"/>
+                                <Span Text="45 seconds"
+                                      FontAttributes="Bold"/>
                                 <Span Text=", depending on the TSE, as it includes a self-test for Swissbit.&#x0a;&#x0a;"/>
                                 <Span Text="The state of the service is displayed in the notification."/>
                             </FormattedString>
@@ -117,21 +126,19 @@
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="15">
                     <HorizontalStackLayout Spacing="8">
-                        <Label Text="✓" FontSize="20" VerticalOptions="Center"/>
+                        <Label Text="✓"
+                               FontSize="20"
+                               VerticalOptions="Center"/>
                         <Label Text="Requirements"
                                FontSize="18"
                                FontAttributes="Bold"
                                VerticalOptions="Center"/>
                     </HorizontalStackLayout>
-                    <Label LineBreakMode="WordWrap" FontSize="14">
+                    <Label LineBreakMode="WordWrap"
+                           FontSize="14">
                         <Label.FormattedText>
                             <FormattedString>
-                                <Span Text="Make sure the corresponding launcher app ("/>
-                                <Span Text="gRPC" FontAttributes="Bold"/>
-                                <Span Text=" or "/>
-                                <Span Text="HTTP" FontAttributes="Bold"/>
-                                <Span Text=") is installed and running on your device.&#x0a;&#x0a;"/>
-                                <Span Text="Intent-based communication doesn't require a separate launcher app."/>
+                                <Span Text="Make sure the fiskaltrust launcher app is installed and running on your device.&#x0a;&#x0a;"/>
                             </FormattedString>
                         </Label.FormattedText>
                     </Label>
