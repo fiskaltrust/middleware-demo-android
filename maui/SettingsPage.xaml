@@ -57,7 +57,7 @@
 
                     <VerticalStackLayout>
                         <RadioButton x:Name="radioIntentActivity"
-                                     Content="Intent (Activity)"
+                                     Content="Intent-Activity"
                                      GroupName="CommType"
                                      FontAttributes="Bold"
                                      FontSize="16"
@@ -73,7 +73,7 @@
 
                     <VerticalStackLayout>
                         <RadioButton x:Name="radioIntentService"
-                                     Content="Service IPC (Bound)"
+                                     Content="Intent-Service"
                                      GroupName="CommType"
                                      FontAttributes="Bold"
                                      FontSize="16"
