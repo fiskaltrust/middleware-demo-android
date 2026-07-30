@@ -23,7 +23,7 @@ namespace fiskaltrust.Middleware.Demo
         {
             _cashBoxId = cashBoxId;
             _accessToken = accessToken;
-            _intentService = PosSystemTransportFactory.GetInstance(SettingsPage.GetSelectedProtocol() == "intent-service");
+            _intentService = PosSystemTransportFactory.GetInstance(SettingsPage.GetSelectedProtocol() == "service-ipc");
         }
 
         public Task<EchoResponse> SendEchoRequest(Activity activity, Guid operationId, EchoRequest echoRequest)

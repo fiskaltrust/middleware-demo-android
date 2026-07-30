@@ -59,7 +59,7 @@ public partial class SettingsPage : ContentPage
             case "intent-activity":
                 radioIntentActivity.IsChecked = true;
                 break;
-            case "intent-service":
+            case "service-ipc":
                 radioIntentService.IsChecked = true;
                 break;
             default:
@@ -79,7 +79,7 @@ public partial class SettingsPage : ContentPage
             }
             else if (radioButton == radioIntentService)
             {
-                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "intent-service");
+                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "service-ipc");
             }
         }
     }
