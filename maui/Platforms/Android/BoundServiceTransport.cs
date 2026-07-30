@@ -89,7 +89,16 @@ namespace fiskaltrust.Middleware.Demo.Platforms.Android
                 }
 
                 _connection = new BoundServiceConnection(_context);
-                _serviceMessenger = await _connection.BindAsync();
+                var bindTask = _connection.BindAsync();
+                var completed = await Task.WhenAny(bindTask, Task.Delay(TimeSpan.FromSeconds(10)));
+                if (completed != bindTask)
+                {
+                    _connection.Dispose();
+                    _connection = null;
+                    throw new TimeoutException("Timed out binding to PosSystemAPIService.");
+                }
+
+                _serviceMessenger = await bindTask;
                 return (_connection, _serviceMessenger);
             }
             catch
