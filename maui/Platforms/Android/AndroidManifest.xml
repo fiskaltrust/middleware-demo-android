@@ -11,6 +11,11 @@
 			</intent-filter>
 		</receiver>
 	</application>
+	<!-- Required on Android 11+ (package visibility): without this, resolving/binding the
+	     launcher's PosSystemAPIService fails and BindService returns false. -->
+	<queries>
+		<package android:name="eu.fiskaltrust.androidlauncher" />
+	</queries>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="eu.fiskaltrust.androidlauncher.permission.POSSYSTEMAPI" />
