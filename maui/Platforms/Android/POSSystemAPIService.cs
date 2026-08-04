@@ -9,108 +9,104 @@ namespace fiskaltrust.Middleware.Demo
 {
     public class POSSystemAPIService
     {
-        private Dictionary<string, string> _headers => new Dictionary<string, string>
-        {
-            { "x-cashbox-id", _cashBoxId.ToString() },
-            { "x-cashbox-accesstoken", _accessToken },
-        };
+        private readonly IPosSystemTransport _transport;
 
-        private Guid _cashBoxId;
-        private string _accessToken;
-        private readonly IPosSystemTransport _intentService;
-
-        public POSSystemAPIService(Guid cashBoxId, string accessToken)
+        public POSSystemAPIService()
         {
-            _cashBoxId = cashBoxId;
-            _accessToken = accessToken;
-            _intentService = PosSystemTransportFactory.GetInstance(SettingsPage.GetSelectedProtocol() == "service-ipc");
+            _transport = PosSystemTransportFactory.GetInstance(SettingsPage.GetSelectedProtocol() == "service-ipc");
         }
 
-        public Task<EchoResponse> SendEchoRequest(Activity activity, Guid operationId, EchoRequest echoRequest)
+        private static Dictionary<string, string> GetHeaders(Guid cashBoxId, string accessToken, Guid operationId) => new()
+        {
+            { "x-cashbox-id", cashBoxId.ToString() },
+            { "x-cashbox-accesstoken", accessToken },
+            {"x-operation-id", operationId.ToString()}
+        };
+
+        public Task<EchoResponse> SendEchoRequest(Activity activity, Guid cashBoxId, string accessToken, Guid operationId, EchoRequest echoRequest)
         {
             var request = new POSSystemAPIRequest
             {
                 Method = "POST",
                 Path = "/v2/echo",
-                Headers = _headers,
+                Headers = GetHeaders(cashBoxId, accessToken, operationId),
                 Body = JsonConvert.SerializeObject(echoRequest),
-                RequestId = new Guid().ToString()
             };
-            if(echoRequest == null)
+            if (echoRequest == null)
             {
                 request.Body = null;
             }
-            return PerformPOSSystemAPIIntent<EchoResponse>(activity, operationId, request);
+            return PerformPOSSystemAPIRequest<EchoResponse>(activity, request);
         }
 
-        public Task<fiskaltrust.ifPOS.v2.ReceiptResponse> SignReceipt(Activity activity, Guid operationId, ReceiptRequest receipt)
+        public Task<fiskaltrust.ifPOS.v2.ReceiptResponse> SignReceipt(Activity activity, Guid cashBoxId, string accessToken, Guid operationId, ReceiptRequest receipt)
         {
             var request = new POSSystemAPIRequest
             {
                 Method = "POST",
                 Path = "/v2/sign",
-                Headers = _headers,
-                Body = JsonConvert.SerializeObject(receipt),
-                RequestId = new Guid().ToString()
+                Headers = GetHeaders(cashBoxId, accessToken, operationId),
+                Body = JsonConvert.SerializeObject(receipt)
             };
             if (receipt == null)
             {
                 request.Body = null;
             }
-            return PerformPOSSystemAPIIntent<fiskaltrust.ifPOS.v2.ReceiptResponse>(activity, operationId, request);
+            return PerformPOSSystemAPIRequest<fiskaltrust.ifPOS.v2.ReceiptResponse>(activity, request);
         }
 
-        public Task<PaymentResponse> SendPaymentRequest(Activity activity, Guid operationId, PaymentRequest paymentRequest)
+        public Task<PaymentResponse> SendPaymentRequest(Activity activity, Guid cashBoxId, string accessToken, Guid operationId, PaymentRequest paymentRequest)
         {
             var request = new POSSystemAPIRequest
             {
                 Method = "POST",
                 Path = "/v2/pay",
-                Headers = _headers,
-                Body = JsonConvert.SerializeObject(paymentRequest),
-                RequestId = new Guid().ToString()
+                Headers = GetHeaders(cashBoxId, accessToken, operationId),
+                Body = JsonConvert.SerializeObject(paymentRequest)
             };
             if (paymentRequest == null)
             {
                 request.Body = null;
             }
-            return PerformPOSSystemAPIIntent<PaymentResponse>(activity, operationId, request);
+            return PerformPOSSystemAPIRequest<PaymentResponse>(activity, request);
         }
 
-        public Task<IssuingResponse> SendIssuingRequest(Activity activity, Guid operationId, IssuingRequest issuingRequest)
+        public Task<IssuingResponse> SendIssuingRequest(Activity activity, Guid cashBoxId, string accessToken, Guid operationId, IssuingRequest issuingRequest)
         {
             var request = new POSSystemAPIRequest
             {
                 Method = "POST",
                 Path = "/v2/issue",
-                Headers = _headers,
-                Body = JsonConvert.SerializeObject(issuingRequest),
-                RequestId = new Guid().ToString()
+                Headers = GetHeaders(cashBoxId, accessToken, operationId),
+                Body = JsonConvert.SerializeObject(issuingRequest)
             };
             if (issuingRequest == null)
             {
                 request.Body = null;
             }
-            return PerformPOSSystemAPIIntent<IssuingResponse>(activity, operationId, request);
+            return PerformPOSSystemAPIRequest<IssuingResponse>(activity, request);
         }
 
-        public async Task<T> PerformPOSSystemAPIIntent<T>(Activity activity, Guid operationId, POSSystemAPIRequest request)
+
+
+        public async Task<string> PerformPOSSystemAPIRequest(Activity activity, POSSystemAPIRequest request)
         {
-            request.Headers.Add("x-operation-id", operationId.ToString());
             var headersJson = JsonConvert.SerializeObject(request.Headers);
             var headerB64 = ToBase64Url(headersJson);
             var bodyB64 = request.Body != null ? ToBase64Url(request.Body) : null;
 
-            PosSystemApiResponse response = await _intentService.SendAsync(new RequestInfo() { Method = request.Method, Path = request.Path, HeaderB64 = headerB64, BodyB64 = bodyB64 });
+            PosSystemApiResponse response = await _transport.SendAsync(new RequestInfo() { Method = request.Method, Path = request.Path, HeaderB64 = headerB64, BodyB64 = bodyB64 });
             var content = FromBase64Url(response.ContentBase64Url ?? string.Empty);
             if (!response.IsSuccess)
             {
                 throw new Exception(content);
             }
 
-            return JsonConvert.DeserializeObject<T>(content)!;
+            return content;
         }
-    
+
+        public async Task<T> PerformPOSSystemAPIRequest<T>(Activity activity, POSSystemAPIRequest request) => JsonConvert.DeserializeObject<T>(await PerformPOSSystemAPIRequest(activity, request))!;
+
         private string ToBase64Url(string text)
         {
             var bytes = Encoding.UTF8.GetBytes(text);
@@ -132,7 +128,7 @@ namespace fiskaltrust.Middleware.Demo
 
             var bytes = Convert.FromBase64String(base64);
             return Encoding.UTF8.GetString(bytes);
-        }       
+        }
     }
 }
 

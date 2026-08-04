@@ -22,6 +22,59 @@
                     <RoundRectangle CornerRadius="8"/>
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="10">
+                    <Label Text="Pairing PIN"
+                           FontAttributes="Bold"
+                           FontSize="14"/>
+                    <Label Text="Enter the PIN shown in the fiskaltrust.Portal to automatically retrieve your Cashbox ID and Access Token."
+                           FontSize="12"
+                           TextColor="Gray"
+                           LineBreakMode="WordWrap"/>
+                    <Grid ColumnDefinitions="*,Auto"
+                          ColumnSpacing="10">
+                        <Entry x:Name="entryPairPin"
+                               Grid.Column="0"
+                               Placeholder="0000"
+                               Keyboard="Numeric"
+                               MaxLength="4"
+                               FontSize="18"
+                               CharacterSpacing="6"
+                               HorizontalTextAlignment="Center"
+                               ClearButtonVisibility="WhileEditing"
+                               ReturnType="Done"
+                               TextChanged="OnPairPinChanged"
+                               Completed="OnPairClickedAsync"/>
+                        <Button x:Name="btnPair"
+                                Grid.Column="1"
+                                Text="Pair"
+                                MinimumWidthRequest="90"
+                                IsEnabled="False"
+                                Clicked="OnPairClickedAsync"/>
+                    </Grid>
+                    <HorizontalStackLayout x:Name="pairingStatus"
+                                           Spacing="8"
+                                           IsVisible="False">
+                        <ActivityIndicator x:Name="pairingIndicator"
+                                           IsRunning="False"
+                                           WidthRequest="18"
+                                           HeightRequest="18"
+                                           VerticalOptions="Center"/>
+                        <Label Text="Pairing…"
+                               FontSize="12"
+                               TextColor="Gray"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border StrokeThickness="1"
+                    Stroke="LightGray"
+                    BackgroundColor="White"
+                    Padding="15"
+                    Margin="0,0,0,10">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="10">
                     <Label Text="Cashbox ID"
                            FontAttributes="Bold"
                            FontSize="14"/>

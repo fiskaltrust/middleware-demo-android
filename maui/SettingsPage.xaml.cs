@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 
 #if ANDROID
 using Android.Content;
@@ -47,6 +48,71 @@ public partial class SettingsPage : ContentPage
     public static string GetAccessToken()
     {
         return Preferences.Get(ACCESS_TOKEN_PREFERENCE_KEY, DEFAULT_ACCESS_TOKEN);
+    }
+    private void OnPairPinChanged(object? sender, TextChangedEventArgs e)
+    {
+        btnPair.IsEnabled = !string.IsNullOrWhiteSpace(e.NewTextValue);
+    }
+
+    private async void OnPairClickedAsync(object? sender, EventArgs e)
+    {
+        var pin = entryPairPin.Text?.Trim();
+        if (string.IsNullOrEmpty(pin))
+        {
+            return;
+        }
+
+        SetPairingBusy(true);
+
+        Dictionary<string, string> response;
+        try
+        {
+            var responseString = await new POSSystemAPIService().PerformPOSSystemAPIRequest(Platform.CurrentActivity!, new POSSystemAPIRequest
+            {
+                Method = "POST",
+                Path = "/v2/pair",
+                Body = JsonSerializer.Serialize(new { Pin = pin })
+            });
+
+            response = JsonSerializer.Deserialize<Dictionary<string, string>>(responseString)!;
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Pairing Failed", $"An error occurred while trying to pair with the POS system: {ex.Message}", "OK");
+            return;
+        }
+        finally
+        {
+            SetPairingBusy(false);
+        }
+
+        response.TryGetValue("CashBoxId", out var cashboxId);
+        response.TryGetValue("AccessToken", out var accessToken);
+
+
+        if (cashboxId != null && accessToken != null)
+        {
+            entryCashboxId.Text = cashboxId;
+            entryAccessToken.Text = accessToken;
+
+            Preferences.Set(CASHBOX_ID_PREFERENCE_KEY, cashboxId);
+            Preferences.Set(ACCESS_TOKEN_PREFERENCE_KEY, accessToken);
+
+            entryPairPin.Text = string.Empty;
+            await DisplayAlertAsync("Pairing Successful", "Cashbox ID and Access Token have been retrieved and saved.", "OK");
+        }
+        else
+        {
+            await DisplayAlertAsync("Pairing Failed", "The POS system response did not contain valid credentials. Please check the PIN and try again. ", "OK");
+        }
+    }
+
+    private void SetPairingBusy(bool isBusy)
+    {
+        btnPair.IsEnabled = !isBusy && !string.IsNullOrWhiteSpace(entryPairPin.Text);
+        entryPairPin.IsEnabled = !isBusy;
+        pairingStatus.IsVisible = isBusy;
+        pairingIndicator.IsRunning = isBusy;
     }
 
     private void LoadSavedProtocol()

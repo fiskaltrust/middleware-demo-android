@@ -9,6 +9,5 @@ namespace fiskaltrust.Middleware.Demo
         public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
         public string? Body { get; set; }
         public string ResponseAction { get; set; } = string.Empty;
-        public string RequestId { get; set; } = string.Empty;
     }
 }

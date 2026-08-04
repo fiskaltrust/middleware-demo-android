@@ -6,13 +6,16 @@ using System.Threading.Tasks;
 using Android.Content;
 using Android.Widget;
 using Platform = Microsoft.Maui.ApplicationModel.Platform;
+using Button = Microsoft.Maui.Controls.Button;
 #endif
 
 namespace fiskaltrust.Middleware.Demo;
 
 public partial class IssuingPage : ContentPage
 {
-    private static string CASHBOX_ID => SettingsPage.GetCashboxId();
+    private static Guid CASHBOX_ID => Guid.TryParse(SettingsPage.GetCashboxId(), out var cashboxId)
+        ? cashboxId
+        : throw new InvalidOperationException("The configured Cashbox ID is not a valid GUID. Please check it on the Settings page.");
     private static string ACCESS_TOKEN => SettingsPage.GetAccessToken();
 
 #if ANDROID
@@ -52,10 +55,7 @@ public partial class IssuingPage : ContentPage
     {
         base.OnAppearing();
 #if ANDROID
-        if (Guid.TryParse(CASHBOX_ID, out var cashboxGuid))
-        {
-            _fiskaltrusClient = new POSSystemAPIService(cashboxGuid, ACCESS_TOKEN);
-        }
+        _fiskaltrusClient = new POSSystemAPIService();
 #endif
         UpdateProtocolDisplay();
     }
@@ -96,7 +96,7 @@ public partial class IssuingPage : ContentPage
         }
 
         // Show result in message box
-        await DisplayAlert(
+        await DisplayAlertAsync(
             $"Retry Result: {_lastOperation.DisplayName}",
             result,
             "OK"
@@ -108,7 +108,7 @@ public partial class IssuingPage : ContentPage
         if (!ValidateIssuingForm())
             return;
 
-        SetButtonsEnabled(false);
+        SetOperationInProgress(sender as Button, true);
 
         try
         {
@@ -125,7 +125,7 @@ public partial class IssuingPage : ContentPage
             await ShowErrorAsync("Document Issuing Failed", ex);
         }
 
-        SetButtonsEnabled(true);
+        SetOperationInProgress(sender as Button, false);
     }
 
     private async void OnValidateDocumentClicked(object? sender, EventArgs e)
@@ -133,7 +133,7 @@ public partial class IssuingPage : ContentPage
         if (!ValidateIssuingForm())
             return;
 
-        SetButtonsEnabled(false);
+        SetOperationInProgress(sender as Button, true);
 
         try
         {
@@ -150,18 +150,18 @@ public partial class IssuingPage : ContentPage
             await ShowErrorAsync("Document Validation Failed", ex);
         }
 
-        SetButtonsEnabled(true);
+        SetOperationInProgress(sender as Button, false);
     }
 
     private async void OnCancelDocumentClicked(object? sender, EventArgs e)
     {
         if (string.IsNullOrEmpty(_lastIssuedDocumentId))
         {
-            await DisplayAlert("Cancel Document", "No document has been issued yet to cancel.", "OK");
+            await DisplayAlertAsync("Cancel Document", "No document has been issued yet to cancel.", "OK");
             return;
         }
 
-        var confirmed = await DisplayAlert(
+        var confirmed = await DisplayAlertAsync(
             "Cancel Document",
             $"Are you sure you want to cancel document {_lastIssuedDocumentId}?",
             "Yes",
@@ -171,7 +171,7 @@ public partial class IssuingPage : ContentPage
         if (!confirmed)
             return;
 
-        SetButtonsEnabled(false);
+        SetOperationInProgress(sender as Button, true);
 
         try
         {
@@ -188,7 +188,7 @@ public partial class IssuingPage : ContentPage
             await ShowErrorAsync("Document Cancellation Failed", ex);
         }
 
-        SetButtonsEnabled(true);
+        SetOperationInProgress(sender as Button, false);
     }
 
     private async void OnSampleInvoiceClicked(object? sender, EventArgs e)
@@ -249,31 +249,31 @@ public partial class IssuingPage : ContentPage
     {
         if (pickerDocumentType.SelectedIndex == -1)
         {
-            DisplayAlert("Validation Error", "Please select a document type.", "OK");
+            DisplayAlertAsync("Validation Error", "Please select a document type.", "OK");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(entryCustomerName.Text))
         {
-            DisplayAlert("Validation Error", "Please enter a customer name.", "OK");
+            DisplayAlertAsync("Validation Error", "Please enter a customer name.", "OK");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(entryDocumentAmount.Text))
         {
-            DisplayAlert("Validation Error", "Please enter a document amount.", "OK");
+            DisplayAlertAsync("Validation Error", "Please enter a document amount.", "OK");
             return false;
         }
 
         if (!decimal.TryParse(entryDocumentAmount.Text, out decimal amount) || amount < 0)
         {
-            DisplayAlert("Validation Error", "Please enter a valid amount (must be 0 or positive).", "OK");
+            DisplayAlertAsync("Validation Error", "Please enter a valid amount (must be 0 or positive).", "OK");
             return false;
         }
 
         if (pickerCurrency.SelectedIndex == -1)
         {
-            DisplayAlert("Validation Error", "Please select a currency.", "OK");
+            DisplayAlertAsync("Validation Error", "Please select a currency.", "OK");
             return false;
         }
 
@@ -294,8 +294,8 @@ public partial class IssuingPage : ContentPage
 
         return new IssuingRequest
         {
-            ftCashBoxID = CASHBOX_ID,
-            ftQueueID = Guid.Parse(CASHBOX_ID),
+            ftCashBoxID = CASHBOX_ID.ToString(),
+            ftQueueID = CASHBOX_ID,
             ftPosSystemId = "d4a62055-ca6c-4372-ae4d-f835a88e4a5d",
             cbTerminalID = "T1",
             DocumentType = docType,
@@ -305,7 +305,6 @@ public partial class IssuingPage : ContentPage
             Amount = amount,
             Currency = currency,
             Description = description,
-            RequestId = Guid.NewGuid().ToString(),
             Timestamp = DateTime.UtcNow,
             cbUser = "Operator",
             cbArea = "Issuing"
@@ -316,13 +315,12 @@ public partial class IssuingPage : ContentPage
     {
         return new IssuingRequest
         {
-            ftCashBoxID = CASHBOX_ID,
-            ftQueueID = Guid.Parse(CASHBOX_ID),
+            ftCashBoxID = CASHBOX_ID.ToString(),
+            ftQueueID = CASHBOX_ID,
             ftPosSystemId = "d4a62055-ca6c-4372-ae4d-f835a88e4a5d",
             cbTerminalID = "T1",
             DocumentType = "Cancellation",
             DocumentNumber = documentId,
-            RequestId = Guid.NewGuid().ToString(),
             Timestamp = DateTime.UtcNow,
             cbUser = "Operator",
             cbArea = "Cancellation"
@@ -333,11 +331,27 @@ public partial class IssuingPage : ContentPage
     {
 
 #if ANDROID
-        var data = await _fiskaltrusClient!.SendIssuingRequest(Platform.CurrentActivity!, operationId, issuingRequest!);
+        var data = await _fiskaltrusClient!.SendIssuingRequest(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId, issuingRequest!);
         return JsonConvert.SerializeObject(data, Formatting.Indented);
 #endif
     }
 
+
+    private static bool UsesBoundService => SettingsPage.GetSelectedProtocol() == "service-ipc";
+
+    // The bound service supports parallel requests, so only the pressed button is
+    // disabled in that mode. Intent mode still disables all buttons while busy.
+    private void SetOperationInProgress(Button? pressedButton, bool inProgress)
+    {
+        if (UsesBoundService && pressedButton != null)
+        {
+            pressedButton.IsEnabled = !inProgress;
+        }
+        else
+        {
+            SetButtonsEnabled(!inProgress);
+        }
+    }
 
     private void SetButtonsEnabled(bool state)
     {
@@ -362,7 +376,7 @@ public partial class IssuingPage : ContentPage
             errorMessage = ex.InnerException.Message;
         }
 
-        await DisplayAlert(
+        await DisplayAlertAsync(
             $"? {title}",
             $"{errorMessage}\n\n?? Error Type: {errorType}",
             "OK"
@@ -400,7 +414,6 @@ public class IssuingRequest
     public decimal Amount { get; set; }
     public string Currency { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public string RequestId { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
 }
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Android.Content;
 using Android.Widget;
 using Platform = Microsoft.Maui.ApplicationModel.Platform;
+using Button = Microsoft.Maui.Controls.Button;
 #endif
 
 namespace fiskaltrust.Middleware.Demo;
@@ -15,7 +16,9 @@ public partial class PaymentPage : ContentPage
 {
     private const bool SANDBOX = true;
 
-    private static string CASHBOX_ID => SettingsPage.GetCashboxId();
+    private static Guid CASHBOX_ID => Guid.TryParse(SettingsPage.GetCashboxId(), out var cashboxId)
+        ? cashboxId
+        : throw new InvalidOperationException("The configured Cashbox ID is not a valid GUID. Please check it on the Settings page.");
     private static string ACCESS_TOKEN => SettingsPage.GetAccessToken();
 
 #if ANDROID
@@ -48,10 +51,7 @@ public partial class PaymentPage : ContentPage
     {
         base.OnAppearing();
 #if ANDROID
-        if (Guid.TryParse(CASHBOX_ID, out var cashboxGuid))
-        {
-            _fiskaltrusClient = new POSSystemAPIService(cashboxGuid, ACCESS_TOKEN);
-        }
+        _fiskaltrusClient = new POSSystemAPIService();
 #endif
         UpdateProtocolDisplay();
     }
@@ -92,7 +92,7 @@ public partial class PaymentPage : ContentPage
         }
 
         // Show result in message box
-        await DisplayAlert(
+        await DisplayAlertAsync(
             $"Retry Result: {_lastOperation.DisplayName}",
             result,
             "OK"
@@ -104,7 +104,7 @@ public partial class PaymentPage : ContentPage
         if (!ValidatePaymentForm())
             return;
 
-        SetButtonsEnabled(false);
+        SetOperationInProgress(sender as Button, true);
 
         try
         {
@@ -121,7 +121,7 @@ public partial class PaymentPage : ContentPage
             await ShowErrorAsync("Payment Failed", ex);
         }
 
-        SetButtonsEnabled(true);
+        SetOperationInProgress(sender as Button, false);
     }
 
     private void OnClearPaymentFormClicked(object? sender, EventArgs e)
@@ -134,13 +134,13 @@ public partial class PaymentPage : ContentPage
     {
         if (string.IsNullOrWhiteSpace(entryPaymentAmount.Text))
         {
-            DisplayAlert("Validation Error", "Please enter a payment amount.", "OK");
+            DisplayAlertAsync("Validation Error", "Please enter a payment amount.", "OK");
             return false;
         }
 
         if (!decimal.TryParse(entryPaymentAmount.Text, out decimal amount) || amount <= 0)
         {
-            DisplayAlert("Validation Error", "Please enter a valid positive amount.", "OK");
+            DisplayAlertAsync("Validation Error", "Please enter a valid positive amount.", "OK");
             return false;
         }
 
@@ -165,11 +165,27 @@ public partial class PaymentPage : ContentPage
     private async Task<string> ExecutePaymentOperationAsync(Guid operationId, PaymentRequest paymentRequest)
     {
 #if ANDROID
-        var data = await _fiskaltrusClient!.SendPaymentRequest(Platform.CurrentActivity!, operationId, paymentRequest);
+        var data = await _fiskaltrusClient!.SendPaymentRequest(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId, paymentRequest);
         return JsonConvert.SerializeObject(data, Formatting.Indented);
 #endif
     }
 
+
+    private static bool UsesBoundService => SettingsPage.GetSelectedProtocol() == "service-ipc";
+
+    // The bound service supports parallel requests, so only the pressed button is
+    // disabled in that mode. Intent mode still disables all buttons while busy.
+    private void SetOperationInProgress(Button? pressedButton, bool inProgress)
+    {
+        if (UsesBoundService && pressedButton != null)
+        {
+            pressedButton.IsEnabled = !inProgress;
+        }
+        else
+        {
+            SetButtonsEnabled(!inProgress);
+        }
+    }
 
     private void SetButtonsEnabled(bool state)
     {
@@ -188,7 +204,7 @@ public partial class PaymentPage : ContentPage
             errorMessage = ex.InnerException.Message;
         }
 
-        await DisplayAlert(
+        await DisplayAlertAsync(
             $"❌ {title}",
             $"{errorMessage}\n\n📋 Error Type: {errorType}",
             "OK"
