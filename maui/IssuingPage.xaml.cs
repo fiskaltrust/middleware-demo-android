@@ -19,7 +19,7 @@ public partial class IssuingPage : ContentPage
     private static string ACCESS_TOKEN => SettingsPage.GetAccessToken();
 
 #if ANDROID
-    private POSSystemAPIService? _fiskaltrusClient;
+    private PosSystemApiService? _fiskaltrusClient;
 #endif
 
     // Last operation tracking
@@ -55,7 +55,7 @@ public partial class IssuingPage : ContentPage
     {
         base.OnAppearing();
 #if ANDROID
-        _fiskaltrusClient = new POSSystemAPIService();
+        _fiskaltrusClient = new PosSystemApiService();
 #endif
         UpdateProtocolDisplay();
     }

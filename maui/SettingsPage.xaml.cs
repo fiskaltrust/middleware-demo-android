@@ -67,7 +67,7 @@ public partial class SettingsPage : ContentPage
         Dictionary<string, string> response;
         try
         {
-            var responseString = await new POSSystemAPIService().PerformPOSSystemAPIRequest(Platform.CurrentActivity!, new POSSystemAPIRequest
+            var responseString = await new PosSystemApiService().PerformPosSystemApiRequest(Platform.CurrentActivity!, new PosSystemApiRequest
             {
                 Method = "POST",
                 Path = "/v2/pair",
