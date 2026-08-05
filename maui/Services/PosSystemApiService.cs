@@ -1,6 +1,6 @@
 using Android.App;
 using fiskaltrust.ifPOS.v2;
-using fiskaltrust.Middleware.Demo.Platforms.Android;
+using fiskaltrust.Middleware.Demo.Services;
 using Newtonsoft.Json;
 using System.Text;
 

@@ -1,10 +1,8 @@
 using System;
 using System.Text.Json;
 
-#if ANDROID
 using Android.Content;
 using Platform = Microsoft.Maui.ApplicationModel.Platform;
-#endif
 
 namespace fiskaltrust.Middleware.Demo;
 

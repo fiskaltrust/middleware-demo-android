@@ -3,12 +3,10 @@ using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 
-#if ANDROID
 using Android.Content;
 using Android.Widget;
 using Platform = Microsoft.Maui.ApplicationModel.Platform;
 using Button = Microsoft.Maui.Controls.Button;
-#endif
 
 namespace fiskaltrust.Middleware.Demo;
 
@@ -21,9 +19,7 @@ public partial class PaymentPage : ContentPage
         : throw new InvalidOperationException("The configured Cashbox ID is not a valid GUID. Please check it on the Settings page.");
     private static string ACCESS_TOKEN => SettingsPage.GetAccessToken();
 
-#if ANDROID
     private PosSystemApiService? _fiskaltrusClient;
-#endif
 
     // Last operation tracking
     private LastOperationInfo? _lastOperation;
@@ -50,9 +46,7 @@ public partial class PaymentPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-#if ANDROID
         _fiskaltrusClient = new PosSystemApiService();
-#endif
         UpdateProtocolDisplay();
     }
 
@@ -164,10 +158,8 @@ public partial class PaymentPage : ContentPage
 
     private async Task<string> ExecutePaymentOperationAsync(Guid operationId, PaymentRequest paymentRequest)
     {
-#if ANDROID
         var data = await _fiskaltrusClient!.SendPaymentRequest(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId, paymentRequest);
         return JsonConvert.SerializeObject(data, Formatting.Indented);
-#endif
     }
 
 

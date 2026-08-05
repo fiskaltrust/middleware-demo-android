@@ -3,7 +3,7 @@ using Android.OS;
 using fiskaltrust.AndroidLauncher.AndroidService;
 using Platform = Microsoft.Maui.ApplicationModel.Platform;
 
-namespace fiskaltrust.Middleware.Demo.Platforms.Android
+namespace fiskaltrust.Middleware.Demo.Services
 {
     // Communicates with the fiskaltrust PosSystemAPIService via Android's bound service / Messenger IPC mechanism.
     // Each request is packed into an Android Message and sent to the service; the response arrives

@@ -2,7 +2,7 @@
 using fiskaltrust.AndroidLauncher.AndroidService;
 using Platform = Microsoft.Maui.ApplicationModel.Platform;
 
-namespace fiskaltrust.Middleware.Demo.Platforms.Android
+namespace fiskaltrust.Middleware.Demo.Services
 {
     // Communicates with the fiskaltrust middleware via Android's startActivityForResult mechanism.
     // Each request launches the launcher's PosSystemAPI activity with the request data as intent extras;

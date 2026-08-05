@@ -1,4 +1,4 @@
-﻿namespace fiskaltrust.Middleware.Demo.Platforms.Android
+﻿namespace fiskaltrust.Middleware.Demo.Services
 {
     public interface IPosSystemTransport
     {
