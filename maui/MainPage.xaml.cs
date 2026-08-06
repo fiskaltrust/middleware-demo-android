@@ -1,30 +1,27 @@
-﻿using fiskaltrust.ifPOS.v1;
-using fiskaltrust.Middleware.Interface.Client.Grpc;
-using fiskaltrust.Middleware.Interface.Client.Http;
+﻿using fiskaltrust.ifPOS.v2;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
+using fiskaltrust.ifPOS.v2.Cases;
 
-#if ANDROID
+
 using Android.Content;
 using Android.Widget;
 using Platform = Microsoft.Maui.ApplicationModel.Platform;
-#endif
+using Button = Microsoft.Maui.Controls.Button;
 
 namespace fiskaltrust.Middleware.Demo;
 
 public partial class MainPage : ContentPage
 {
-    private const string QUEUE_URL_GRPC = "grpc://localhost:1400";
-    private const string QUEUE_URL_REST = "http://localhost:1500/queue";
     private const bool SANDBOX = true;
 
-    private static string CASHBOX_ID => SettingsPage.GetCashboxId();
+    private static Guid CASHBOX_ID => Guid.TryParse(SettingsPage.GetCashboxId(), out var cashboxId)
+        ? cashboxId
+        : throw new InvalidOperationException("The configured Cashbox ID is not a valid GUID. Please check it on the Settings page.");
     private static string ACCESS_TOKEN => SettingsPage.GetAccessToken();
 
-#if ANDROID
-    private POSSystemAPIIntentService? _fiskaltrusClient;
-#endif
+    private PosSystemApiService? _fiskaltrusClient;
 
     // Last operation tracking
     private LastOperationInfo? _lastOperation;
@@ -55,33 +52,14 @@ public partial class MainPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-#if ANDROID
-        if (Guid.TryParse(CASHBOX_ID, out var cashboxGuid))
-        {
-            _fiskaltrusClient = new POSSystemAPIIntentService(cashboxGuid, ACCESS_TOKEN);
-        }
-#endif
+        _fiskaltrusClient = new PosSystemApiService();
         UpdateProtocolDisplay();
-        UpdateUIForProtocol();
     }
 
     private void UpdateProtocolDisplay()
     {
         var protocol = SettingsPage.GetSelectedProtocol();
         lblCurrentProtocol.Text = protocol.ToUpper();
-    }
-
-    private void UpdateUIForProtocol()
-    {
-        var isIntentMode = IsIntentModeSelected();
-
-        // Hide start/stop service buttons for Intent mode
-        btnStartService.IsVisible = !isIntentMode;
-        btnStopService.IsVisible = !isIntentMode;
-        txtServiceStatus.IsVisible = !isIntentMode;
-
-        // Restart config button is available for all protocols
-        btnRestartConfig.IsVisible = true;
     }
 
     private void SetLastOperation(Guid operationId, string body, OperationType type, string? message, string displayName)
@@ -114,7 +92,7 @@ public partial class MainPage : ContentPage
         }
 
         // Show result in message box
-        await DisplayAlert(
+        await DisplayAlertAsync(
             $"Retry Result: {_lastOperation.DisplayName}",
             result,
             "OK"
@@ -136,57 +114,41 @@ public partial class MainPage : ContentPage
 
     private async Task<string> ExecuteEchoRequestAsync(string message, Guid? operationId = null)
     {
-#if ANDROID
-        if (IsIntentModeSelected() && operationId.HasValue)
+        if (operationId.HasValue)
         {
-            var data = await _fiskaltrusClient!.SendEchoRequest(Platform.CurrentActivity!, operationId.Value, JsonConvert.DeserializeObject<EchoRequest>(_lastOperation.Body));
+            var data = await _fiskaltrusClient!.SendEchoRequest(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, JsonConvert.DeserializeObject<EchoRequest>(_lastOperation.Body));
             return JsonConvert.SerializeObject(data, Formatting.Indented);
         }
-        else if (IsIntentModeSelected())
+        else
         {
             operationId ??= Guid.NewGuid();
             var echoRequest = new EchoRequest
             {
                 Message = message
             };
-            var data = await _fiskaltrusClient!.SendEchoRequest(Platform.CurrentActivity!, operationId.Value, echoRequest);
+            var data = await _fiskaltrusClient!.SendEchoRequest(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, echoRequest);
             SetLastOperation(operationId.Value, JsonConvert.SerializeObject(echoRequest), OperationType.EchoRequest, message, "Echo Request");
             return JsonConvert.SerializeObject(data, Formatting.Indented);
-        }
-        else
-#endif
-        {
-            var pos = await GetPOSAsync();
-            var response = await pos.EchoAsync(new EchoRequest { Message = message });
-            return response.Message;
         }
     }
 
     private async Task<string> ExecuteRestartConfigAsync(Guid? operationId = null)
     {
-#if ANDROID
-        if (IsIntentModeSelected() && operationId.HasValue)
+        if (operationId.HasValue)
         {
-            var data = await _fiskaltrusClient!.SendEchoRequest(Platform.CurrentActivity!, operationId.Value, JsonConvert.DeserializeObject<EchoRequest>(_lastOperation.Body));
+            var data = await _fiskaltrusClient!.SendEchoRequest(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, JsonConvert.DeserializeObject<EchoRequest>(_lastOperation.Body));
             return JsonConvert.SerializeObject(data, Formatting.Indented);
         }
-        else if (IsIntentModeSelected())
+        else
         {
             operationId ??= Guid.NewGuid();
             var echoRequest = new EchoRequest
             {
                 Message = null
             };
-            var data = await _fiskaltrusClient!.SendEchoRequest(Platform.CurrentActivity!, operationId.Value, echoRequest);
+            var data = await _fiskaltrusClient!.SendEchoRequest(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, echoRequest);
             SetLastOperation(operationId.Value, JsonConvert.SerializeObject(echoRequest), OperationType.RestartConfig, null, "Restart & Pull Config");
             return "✅ Configuration refresh initiated (Intent)\n\n" + JsonConvert.SerializeObject(data, Formatting.Indented);
-        }
-        else
-#endif
-        {
-            var pos = await GetPOSAsync();
-            await pos.EchoAsync(new EchoRequest { Message = null });
-            return "✅ Configuration refresh initiated\n\nLauncher has been restarted and will pull the latest configuration.";
         }
     }
 
@@ -195,31 +157,23 @@ public partial class MainPage : ContentPage
         var receiptRequest = new ReceiptRequest
         {
             ftCashBoxID = CASHBOX_ID,
-            ftReceiptCase = 0x4445_0001_0000_0000,
+            ftReceiptCase = (ReceiptCase)0x4445_0001_0000_0000,
             cbReceiptReference = Guid.NewGuid().ToString(),
-            cbChargeItems = Array.Empty<ChargeItem>(),
-            cbPayItems = Array.Empty<PayItem>()
+            cbChargeItems = [],
+            cbPayItems = []
         };
 
-#if ANDROID
-        if (IsIntentModeSelected() && operationId.HasValue)
+        if (operationId.HasValue)
         {
-            var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, operationId.Value, JsonConvert.DeserializeObject<ReceiptRequest>(_lastOperation.Body));
-            return JsonConvert.SerializeObject(data, Formatting.Indented);
-        }
-        else if (IsIntentModeSelected())
-        {
-            operationId ??= Guid.NewGuid();
-            var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, operationId.Value, receiptRequest);
-            SetLastOperation(operationId.Value, JsonConvert.SerializeObject(receiptRequest), OperationType.SignRequest, null, "Sign Request");
+            var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, JsonConvert.DeserializeObject<ReceiptRequest>(_lastOperation.Body));
             return JsonConvert.SerializeObject(data, Formatting.Indented);
         }
         else
-#endif
         {
-            var pos = await GetPOSAsync();
-            var response = await pos.SignAsync(receiptRequest);
-            return JsonConvert.SerializeObject(response, Formatting.Indented);
+            operationId ??= Guid.NewGuid();
+            var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, receiptRequest);
+            SetLastOperation(operationId.Value, JsonConvert.SerializeObject(receiptRequest), OperationType.SignRequest, null, "Sign Request");
+            return JsonConvert.SerializeObject(data, Formatting.Indented);
         }
     }
 
@@ -228,7 +182,7 @@ public partial class MainPage : ContentPage
         var receiptRequest = new ReceiptRequest
         {
             ftCashBoxID = CASHBOX_ID,
-            ftPosSystemId = "d4a62055-ca6c-4372-ae4d-f835a88e4a5d",
+            ftPosSystemId = Guid.Parse("d4a62055-ca6c-4372-ae4d-f835a88e4a5d"),
             cbTerminalID = "T1",
             cbReceiptReference = "2020020120152812",
             cbReceiptMoment = DateTime.UtcNow,
@@ -236,29 +190,21 @@ public partial class MainPage : ContentPage
             cbUser = "Receptionist",
             cbArea = "System",
             cbSettlement = "",
-            ftReceiptCase = 0x4445_0001_0000_0003,
-            cbChargeItems = Array.Empty<ChargeItem>(),
-            cbPayItems = Array.Empty<PayItem>()
+            ftReceiptCase = (ReceiptCase)0x4445_0001_0000_0003,
+            cbChargeItems = [],
+            cbPayItems = []
         };
 
-#if ANDROID
-        if (IsIntentModeSelected() && operationId.HasValue)
+        if (operationId.HasValue)
         {
-            var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, operationId.Value, JsonConvert.DeserializeObject<ReceiptRequest>(_lastOperation.Body));
+            var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, JsonConvert.DeserializeObject<ReceiptRequest>(_lastOperation.Body));
             return JsonConvert.SerializeObject(data, Formatting.Indented);
         }
-        else if (IsIntentModeSelected())
+        else
         {
             operationId ??= Guid.NewGuid();
-            var response = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, operationId.Value, receiptRequest);
+            var response = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, receiptRequest);
             SetLastOperation(operationId.Value, JsonConvert.SerializeObject(receiptRequest), OperationType.StartReceipt, null, "Start Receipt");
-            return JsonConvert.SerializeObject(response, Formatting.Indented);
-        }
-        else
-#endif
-        {
-            var pos = await GetPOSAsync();
-            var response = await pos.SignAsync(receiptRequest);
             return JsonConvert.SerializeObject(response, Formatting.Indented);
         }
     }
@@ -268,7 +214,7 @@ public partial class MainPage : ContentPage
         var receiptRequest = new ReceiptRequest
         {
             ftCashBoxID = CASHBOX_ID,
-            ftPosSystemId = "d4a62055-ca6c-4372-ae4d-f835a88e4a5d",
+            ftPosSystemId = Guid.Parse("d4a62055-ca6c-4372-ae4d-f835a88e4a5d"),
             cbTerminalID = "T1",
             cbReceiptReference = "2020020120152812",
             cbReceiptMoment = DateTime.UtcNow,
@@ -276,84 +222,30 @@ public partial class MainPage : ContentPage
             cbUser = "Receptionist",
             cbArea = "System",
             cbSettlement = "",
-            ftReceiptCase = 0x4445_0001_0000_0002,
-            cbChargeItems = Array.Empty<ChargeItem>(),
-            cbPayItems = Array.Empty<PayItem>()
+            ftReceiptCase = (ReceiptCase)0x4445_0001_0000_0002,
+            cbChargeItems = [],
+            cbPayItems = []
         };
 
-#if ANDROID
-        if (IsIntentModeSelected() && operationId.HasValue)
+        if (operationId.HasValue)
         {
-            var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, operationId.Value, JsonConvert.DeserializeObject<ReceiptRequest>(_lastOperation.Body));
+            var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, JsonConvert.DeserializeObject<ReceiptRequest>(_lastOperation.Body));
             return JsonConvert.SerializeObject(data, Formatting.Indented);
         }
-        else if (IsIntentModeSelected())
+        else
         {
             operationId ??= Guid.NewGuid();
-            var response = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, operationId.Value, receiptRequest);
+            var response = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, receiptRequest);
             SetLastOperation(operationId.Value, JsonConvert.SerializeObject(receiptRequest), OperationType.StartReceipt, null, "Start Receipt");
             return JsonConvert.SerializeObject(response, Formatting.Indented);
         }
-        else
-#endif
-        {
-            var pos = await GetPOSAsync();
-            var response = await pos.SignAsync(receiptRequest);
-            return JsonConvert.SerializeObject(response, Formatting.Indented);
-        }
     }
 
-    private bool IsIntentModeSelected()
-    {
-        return SettingsPage.GetSelectedProtocol().ToLower() == "intent";
-    }
-
-    private bool IsGrpcSelected()
-    {
-        return SettingsPage.GetSelectedProtocol().ToLower() == "grpc";
-    }
-
-    private void OnStartServiceClicked(object? sender, EventArgs e)
-    {
-#if ANDROID
-        SetButtonsEnabled(false);
-
-        var componentName = IsGrpcSelected()
-            ? new ComponentName("eu.fiskaltrust.androidlauncher.grpc", "eu.fiskaltrust.androidlauncher.grpc.Start")
-            : new ComponentName("eu.fiskaltrust.androidlauncher.http", "eu.fiskaltrust.androidlauncher.http.Start");
-
-        var intent = new Intent(Intent.ActionSend);
-        intent.SetComponent(componentName);
-        intent.PutExtra("cashboxid", CASHBOX_ID);
-        intent.PutExtra("accesstoken", ACCESS_TOKEN);
-        intent.PutExtra("sandbox", SANDBOX);
-
-        Platform.CurrentActivity?.SendBroadcast(intent);
-
-        SetButtonsEnabled(true);
-#endif
-    }
-
-    private void OnStopServiceClicked(object? sender, EventArgs e)
-    {
-#if ANDROID
-        SetButtonsEnabled(false);
-
-        var intent = new Intent(Intent.ActionSend);
-        var componentName = IsGrpcSelected()
-            ? new ComponentName("eu.fiskaltrust.androidlauncher.grpc", "eu.fiskaltrust.androidlauncher.grpc.Stop")
-            : new ComponentName("eu.fiskaltrust.androidlauncher.http", "eu.fiskaltrust.androidlauncher.http.Stop");
-        intent.SetComponent(componentName);
-        Platform.CurrentActivity?.SendBroadcast(intent);
-
-        SetButtonsEnabled(true);
-#endif
-    }
 
     private async void OnSendEchoRequestClicked(object? sender, EventArgs e)
     {
         var message = $"Hello Android, it's {DateTime.Now:t}!";
-        await SendEchoRequestAsync(message, null);
+        await SendEchoRequestAsync(message, null, sender as Button);
     }
 
     private async void OnRestartConfigClicked(object? sender, EventArgs e)
@@ -368,23 +260,21 @@ public partial class MainPage : ContentPage
         if (!confirmed)
             return;
 
-        await SendEchoRequestAsync(null, null);
+        await SendEchoRequestAsync(null, null, sender as Button);
     }
 
-    private async Task SendEchoRequestAsync(string? message, Guid? operationId)
+    private async Task SendEchoRequestAsync(string? message, Guid? operationId, Button? pressedButton = null)
     {
-        SetButtonsEnabled(false);
-        btnRestartConfig.IsEnabled = false;
+        SetOperationInProgress(pressedButton, true);
 
         try
         {
-#if ANDROID
-            if (IsIntentModeSelected() && operationId.HasValue)
+            if (operationId.HasValue)
             {
-                var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, operationId.Value, JsonConvert.DeserializeObject<ReceiptRequest>(_lastOperation.Body));
+                var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, JsonConvert.DeserializeObject<ReceiptRequest>(_lastOperation.Body));
                 //return JsonConvert.SerializeObject(data, Formatting.Indented);
             }
-            else if (IsIntentModeSelected())
+            else
             {
                 // For Intent mode: if message is null, send null; otherwise use the provided message
                 operationId ??= Guid.NewGuid();
@@ -392,28 +282,13 @@ public partial class MainPage : ContentPage
                 {
                     Message = message
                 };
-                var data = await _fiskaltrusClient!.SendEchoRequest(Platform.CurrentActivity!, operationId.Value, echoRequest);
+                var data = await _fiskaltrusClient!.SendEchoRequest(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId.Value, echoRequest);
                 SetLastOperation(operationId.Value, JsonConvert.SerializeObject(echoRequest), OperationType.EchoRequest, message, "Echo Request");
                 txtResult.Text = JsonConvert.SerializeObject(data, Formatting.Indented);
 
                 if (message == null)
                 {
                     txtResult.Text = "✅ Configuration refresh initiated (Intent)\n\n" + txtResult.Text;
-                }
-            }
-            else
-#endif
-            {
-                var pos = await GetPOSAsync();
-                var response = await pos.EchoAsync(new EchoRequest { Message = message });
-
-                if (message == null)
-                {
-                    txtResult.Text = "✅ Configuration refresh initiated\n\nLauncher has been restarted and will pull the latest configuration.";
-                }
-                else
-                {
-                    txtResult.Text = response.Message;
                 }
             }
         }
@@ -424,40 +299,27 @@ public partial class MainPage : ContentPage
             await ShowErrorAsync($"{operation} Failed", ex);
         }
 
-        SetButtonsEnabled(true);
-        btnRestartConfig.IsEnabled = true;
+        SetOperationInProgress(pressedButton, false);
     }
 
     private async void OnSendSignRequestClicked(object? sender, EventArgs e)
     {
-        SetButtonsEnabled(false);
-
-        var receiptRequest = new ReceiptRequest
-        {
-            ftCashBoxID = CASHBOX_ID,
-            ftReceiptCase = 0x4445_0001_0000_0000,
-            cbReceiptReference = Guid.NewGuid().ToString(),
-            cbChargeItems = Array.Empty<ChargeItem>(),
-            cbPayItems = Array.Empty<PayItem>()
-        };
+        SetOperationInProgress(sender as Button, true);
 
         try
         {
-#if ANDROID
-            if (IsIntentModeSelected())
+            var receiptRequest = new ReceiptRequest
             {
-                var operationId = Guid.NewGuid();
-                var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, operationId, receiptRequest);
-                SetLastOperation(operationId, JsonConvert.SerializeObject(receiptRequest), OperationType.SignRequest, null, "Sign Request");
-                txtSignResult.Text = JsonConvert.SerializeObject(data, Formatting.Indented);
-            }
-            else
-#endif
-            {
-                var pos = await GetPOSAsync();
-                var response = await pos.SignAsync(receiptRequest);
-                txtSignResult.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
-            }
+                ftCashBoxID = CASHBOX_ID,
+                ftReceiptCase = (ReceiptCase)0x4445_0001_0000_0000,
+                cbReceiptReference = Guid.NewGuid().ToString(),
+                cbChargeItems = [],
+                cbPayItems = []
+            };
+            var operationId = Guid.NewGuid();
+            var data = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId, receiptRequest);
+            SetLastOperation(operationId, JsonConvert.SerializeObject(receiptRequest), OperationType.SignRequest, null, "Sign Request");
+            txtSignResult.Text = JsonConvert.SerializeObject(data, Formatting.Indented);
         }
         catch (Exception ex)
         {
@@ -465,47 +327,35 @@ public partial class MainPage : ContentPage
             await ShowErrorAsync("Sign Request Failed", ex);
         }
 
-        SetButtonsEnabled(true);
+        SetOperationInProgress(sender as Button, false);
     }
 
     private async void OnSendStartReceiptClicked(object? sender, EventArgs e)
     {
 
-        SetButtonsEnabled(false);
-
-        var receiptRequest = new ReceiptRequest
-        {
-            ftCashBoxID = CASHBOX_ID,
-            ftPosSystemId = "d4a62055-ca6c-4372-ae4d-f835a88e4a5d",
-            cbTerminalID = "T1",
-            cbReceiptReference = "2020020120152812",
-            cbReceiptMoment = DateTime.UtcNow,
-            ftReceiptCaseData = "",
-            cbUser = "Receptionist",
-            cbArea = "System",
-            cbSettlement = "",
-            ftReceiptCase = 0x4445_0001_0000_0003,
-            cbChargeItems = Array.Empty<ChargeItem>(),
-            cbPayItems = Array.Empty<PayItem>()
-        };
+        SetOperationInProgress(sender as Button, true);
 
         try
         {
-#if ANDROID
-            if (IsIntentModeSelected())
+            var receiptRequest = new ReceiptRequest
             {
-                var operationId = Guid.NewGuid();
-                var response = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, operationId, receiptRequest);
-                SetLastOperation(operationId, JsonConvert.SerializeObject(receiptRequest), OperationType.StartReceipt, null, "Start Receipt");
-                txtSpecialReceiptResult.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
-            }
-            else
-#endif
-            {
-                var pos = await GetPOSAsync();
-                var response = await pos.SignAsync(receiptRequest);
-                txtSpecialReceiptResult.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
-            }
+                ftCashBoxID = CASHBOX_ID,
+                ftPosSystemId = Guid.Parse("d4a62055-ca6c-4372-ae4d-f835a88e4a5d"),
+                cbTerminalID = "T1",
+                cbReceiptReference = "2020020120152812",
+                cbReceiptMoment = DateTime.UtcNow,
+                ftReceiptCaseData = "",
+                cbUser = "Receptionist",
+                cbArea = "System",
+                cbSettlement = "",
+                ftReceiptCase = (ReceiptCase)0x4445_0001_0000_0003,
+                cbChargeItems = [],
+                cbPayItems = []
+            };
+            var operationId = Guid.NewGuid();
+            var response = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId, receiptRequest);
+            SetLastOperation(operationId, JsonConvert.SerializeObject(receiptRequest), OperationType.StartReceipt, null, "Start Receipt");
+            txtSpecialReceiptResult.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
         }
         catch (Exception ex)
         {
@@ -513,47 +363,35 @@ public partial class MainPage : ContentPage
             await ShowErrorAsync("Start Receipt Failed", ex);
         }
 
-        SetButtonsEnabled(true);
+        SetOperationInProgress(sender as Button, false);
     }
 
     private async void OnSendZeroReceiptClicked(object? sender, EventArgs e)
     {
 
-        SetButtonsEnabled(false);
-
-        var receiptRequest = new ReceiptRequest
-        {
-            ftCashBoxID = CASHBOX_ID,
-            ftPosSystemId = "d4a62055-ca6c-4372-ae4d-f835a88e4a5d",
-            cbTerminalID = "T1",
-            cbReceiptReference = "2020020120152812",
-            cbReceiptMoment = DateTime.UtcNow,
-            ftReceiptCaseData = "",
-            cbUser = "Receptionist",
-            cbArea = "System",
-            cbSettlement = "",
-            ftReceiptCase = 0x4445_0001_0000_0002,
-            cbChargeItems = Array.Empty<ChargeItem>(),
-            cbPayItems = Array.Empty<PayItem>()
-        };
+        SetOperationInProgress(sender as Button, true);
 
         try
         {
-#if ANDROID
-            if (IsIntentModeSelected())
+            var receiptRequest = new ReceiptRequest
             {
-                var operationId = Guid.NewGuid();
-                var response = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, operationId, receiptRequest);
-                SetLastOperation(operationId, JsonConvert.SerializeObject(receiptRequest), OperationType.ZeroReceipt, null, "Zero Receipt");
-                txtSpecialReceiptResult.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
-            }
-            else
-#endif
-            {
-                var pos = await GetPOSAsync();
-                var response = await pos.SignAsync(receiptRequest);
-                txtSpecialReceiptResult.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
-            }
+                ftCashBoxID = CASHBOX_ID,
+                ftPosSystemId = Guid.Parse("d4a62055-ca6c-4372-ae4d-f835a88e4a5d"),
+                cbTerminalID = "T1",
+                cbReceiptReference = "2020020120152812",
+                cbReceiptMoment = DateTime.UtcNow,
+                ftReceiptCaseData = "",
+                cbUser = "Receptionist",
+                cbArea = "System",
+                cbSettlement = "",
+                ftReceiptCase = (ReceiptCase)0x4445_0001_0000_0002,
+                cbChargeItems = [],
+                cbPayItems = []
+            };
+            var operationId = Guid.NewGuid();
+            var response = await _fiskaltrusClient!.SignReceipt(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId, receiptRequest);
+            SetLastOperation(operationId, JsonConvert.SerializeObject(receiptRequest), OperationType.ZeroReceipt, null, "Zero Receipt");
+            txtSpecialReceiptResult.Text = JsonConvert.SerializeObject(response, Formatting.Indented);
         }
         catch (Exception ex)
         {
@@ -561,25 +399,23 @@ public partial class MainPage : ContentPage
             await ShowErrorAsync("Zero Receipt Failed", ex);
         }
 
-        SetButtonsEnabled(true);
+        SetOperationInProgress(sender as Button, false);
     }
 
 
-    private async Task<IPOS> GetPOSAsync()
+    private static bool UsesBoundService => SettingsPage.GetSelectedProtocol() == "service-ipc";
+
+    // The bound service supports parallel requests, so only the pressed button is
+    // disabled in that mode. Intent mode still disables all buttons while busy.
+    private void SetOperationInProgress(Button? pressedButton, bool inProgress)
     {
-        if (IsGrpcSelected())
+        if (UsesBoundService && pressedButton != null)
         {
-            return await GrpcPosFactory.CreatePosAsync(new GrpcClientOptions
-            {
-                Url = new Uri(QUEUE_URL_GRPC)
-            });
+            pressedButton.IsEnabled = !inProgress;
         }
         else
         {
-            return await HttpPosFactory.CreatePosAsync(new HttpPosClientOptions
-            {
-                Url = new Uri(QUEUE_URL_REST)
-            });
+            SetButtonsEnabled(!inProgress);
         }
     }
 

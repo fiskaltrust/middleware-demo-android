@@ -1,9 +1,8 @@
 using System;
+using System.Text.Json;
 
-#if ANDROID
 using Android.Content;
 using Platform = Microsoft.Maui.ApplicationModel.Platform;
-#endif
 
 namespace fiskaltrust.Middleware.Demo;
 
@@ -48,24 +47,87 @@ public partial class SettingsPage : ContentPage
     {
         return Preferences.Get(ACCESS_TOKEN_PREFERENCE_KEY, DEFAULT_ACCESS_TOKEN);
     }
+    private void OnPairPinChanged(object? sender, TextChangedEventArgs e)
+    {
+        btnPair.IsEnabled = !string.IsNullOrWhiteSpace(e.NewTextValue);
+    }
+
+    private async void OnPairClickedAsync(object? sender, EventArgs e)
+    {
+        var pin = entryPairPin.Text?.Trim();
+        if (string.IsNullOrEmpty(pin))
+        {
+            return;
+        }
+
+        SetPairingBusy(true);
+
+        Dictionary<string, string> response;
+        try
+        {
+            var responseString = await new PosSystemApiService().PerformPosSystemApiRequest(Platform.CurrentActivity!, new PosSystemApiRequest
+            {
+                Method = "POST",
+                Path = "/v2/pair",
+                Body = JsonSerializer.Serialize(new { Pin = pin })
+            });
+
+            response = JsonSerializer.Deserialize<Dictionary<string, string>>(responseString)!;
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Pairing Failed", $"An error occurred while trying to pair with the POS system: {ex.Message}", "OK");
+            return;
+        }
+        finally
+        {
+            SetPairingBusy(false);
+        }
+
+        response.TryGetValue("CashBoxId", out var cashboxId);
+        response.TryGetValue("AccessToken", out var accessToken);
+
+
+        if (cashboxId != null && accessToken != null)
+        {
+            entryCashboxId.Text = cashboxId;
+            entryAccessToken.Text = accessToken;
+
+            Preferences.Set(CASHBOX_ID_PREFERENCE_KEY, cashboxId);
+            Preferences.Set(ACCESS_TOKEN_PREFERENCE_KEY, accessToken);
+
+            entryPairPin.Text = string.Empty;
+            await DisplayAlertAsync("Pairing Successful", "Cashbox ID and Access Token have been retrieved and saved.", "OK");
+        }
+        else
+        {
+            await DisplayAlertAsync("Pairing Failed", "The POS system response did not contain valid credentials. Please check the PIN and try again. ", "OK");
+        }
+    }
+
+    private void SetPairingBusy(bool isBusy)
+    {
+        btnPair.IsEnabled = !isBusy && !string.IsNullOrWhiteSpace(entryPairPin.Text);
+        entryPairPin.IsEnabled = !isBusy;
+        pairingStatus.IsVisible = isBusy;
+        pairingIndicator.IsRunning = isBusy;
+    }
 
     private void LoadSavedProtocol()
     {
-        var savedProtocol = Preferences.Get(PROTOCOL_PREFERENCE_KEY, "grpc");
+        var savedProtocol = Preferences.Get(PROTOCOL_PREFERENCE_KEY, "intent-activity");
 
         switch (savedProtocol.ToLower())
         {
-            case "grpc":
-                radioGrpc.IsChecked = true;
-                break;
-            case "http":
-                radioHttp.IsChecked = true;
-                break;
             case "intent":
-                radioIntent.IsChecked = true;
+            case "intent-activity":
+                radioIntentActivity.IsChecked = true;
+                break;
+            case "service-ipc":
+                radioIntentService.IsChecked = true;
                 break;
             default:
-                radioGrpc.IsChecked = true;
+                radioIntentActivity.IsChecked = true;
                 break;
         }
     }
@@ -75,62 +137,19 @@ public partial class SettingsPage : ContentPage
         if (e.Value)
         {
             var radioButton = sender as RadioButton;
-            if (radioButton == radioGrpc)
+            if (radioButton == radioIntentActivity)
             {
-                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "grpc");
+                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "intent-activity");
             }
-            else if (radioButton == radioHttp)
+            else if (radioButton == radioIntentService)
             {
-                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "http");
-            }
-            else if (radioButton == radioIntent)
-            {
-                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "intent");
+                Preferences.Set(PROTOCOL_PREFERENCE_KEY, "service-ipc");
             }
         }
     }
 
     public static string GetSelectedProtocol()
     {
-        return Preferences.Get(PROTOCOL_PREFERENCE_KEY, "grpc");
-    }
-
-    private async void OnRequestLogsClicked(object? sender, EventArgs e)
-    {
-#if ANDROID
-        var protocol = GetSelectedProtocol().ToLower();
-
-        if (protocol == "intent")
-        {
-            await DisplayAlertAsync("Not Available", "Log retrieval is only available for gRPC and HTTP protocols.", "OK");
-            return;
-        }
-
-        btnGetLogs.IsEnabled = false;
-        txtLogs.Text = "Requesting logs...";
-
-        var componentName = protocol == "grpc"
-            ? new ComponentName("eu.fiskaltrust.androidlauncher.grpc", "eu.fiskaltrust.androidlauncher.grpc.LogContentLinkActivity")
-            : new ComponentName("eu.fiskaltrust.androidlauncher.http", "eu.fiskaltrust.androidlauncher.http.LogContentLinkActivity");
-
-        var req = new Intent();
-        req.PutExtra("cashboxid", GetCashboxId());
-        req.PutExtra("accesstoken", GetAccessToken());
-        req.SetComponent(componentName);
-
-        try
-        {
-            Platform.CurrentActivity?.StartActivity(req);
-            txtLogs.Text = "Log request sent. Please check the launcher app for logs.";
-        }
-        catch (Exception ex)
-        {
-            txtLogs.Text = $"Error requesting logs: {ex.Message}";
-        }
-
-        btnGetLogs.IsEnabled = true;
-#else
-        await DisplayAlertAsync("Not Available", "This feature is only available on Android.", "OK");
-#endif
+        return Preferences.Get(PROTOCOL_PREFERENCE_KEY, "intent-activity");
     }
 }

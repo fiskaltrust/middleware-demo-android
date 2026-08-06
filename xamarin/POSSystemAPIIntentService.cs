@@ -39,7 +39,6 @@ namespace fiskaltrust.Middleware.Demo
                 Headers = _headers,
                 Body = JsonConvert.SerializeObject(echoRequest),
                 ResponseAction = ResponseAction,
-                RequestId = new Guid().ToString()
             };
             return PerformPOSSystemAPIIntent<EchoResponse>(activity, request);
         }
@@ -53,7 +52,6 @@ namespace fiskaltrust.Middleware.Demo
                 Headers = _headers,
                 Body = JsonConvert.SerializeObject(receipt),
                 ResponseAction = ResponseAction,
-                RequestId = new Guid().ToString()
             };
             return PerformPOSSystemAPIIntent<ReceiptResponse>(activity, request);
         }

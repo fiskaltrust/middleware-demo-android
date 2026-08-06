@@ -1,30 +1,22 @@
-using fiskaltrust.ifPOS.v1;
-using fiskaltrust.Middleware.Interface.Client.Grpc;
-using fiskaltrust.Middleware.Interface.Client.Http;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 
-#if ANDROID
 using Android.Content;
 using Android.Widget;
 using Platform = Microsoft.Maui.ApplicationModel.Platform;
-#endif
+using Button = Microsoft.Maui.Controls.Button;
 
 namespace fiskaltrust.Middleware.Demo;
 
 public partial class IssuingPage : ContentPage
 {
-    private const string QUEUE_URL_GRPC = "grpc://localhost:1400";
-    private const string QUEUE_URL_REST = "http://localhost:1500/queue";
-    private const bool SANDBOX = true;
-
-    private static string CASHBOX_ID => SettingsPage.GetCashboxId();
+    private static Guid CASHBOX_ID => Guid.TryParse(SettingsPage.GetCashboxId(), out var cashboxId)
+        ? cashboxId
+        : throw new InvalidOperationException("The configured Cashbox ID is not a valid GUID. Please check it on the Settings page.");
     private static string ACCESS_TOKEN => SettingsPage.GetAccessToken();
 
-#if ANDROID
-    private POSSystemAPIIntentService? _fiskaltrusClient;
-#endif
+    private PosSystemApiService? _fiskaltrusClient;
 
     // Last operation tracking
     private LastOperationInfo? _lastOperation;
@@ -58,12 +50,7 @@ public partial class IssuingPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-#if ANDROID
-        if (Guid.TryParse(CASHBOX_ID, out var cashboxGuid))
-        {
-            _fiskaltrusClient = new POSSystemAPIIntentService(cashboxGuid, ACCESS_TOKEN);
-        }
-#endif
+        _fiskaltrusClient = new PosSystemApiService();
         UpdateProtocolDisplay();
     }
 
@@ -103,7 +90,7 @@ public partial class IssuingPage : ContentPage
         }
 
         // Show result in message box
-        await DisplayAlert(
+        await DisplayAlertAsync(
             $"Retry Result: {_lastOperation.DisplayName}",
             result,
             "OK"
@@ -115,7 +102,7 @@ public partial class IssuingPage : ContentPage
         if (!ValidateIssuingForm())
             return;
 
-        SetButtonsEnabled(false);
+        SetOperationInProgress(sender as Button, true);
 
         try
         {
@@ -132,7 +119,7 @@ public partial class IssuingPage : ContentPage
             await ShowErrorAsync("Document Issuing Failed", ex);
         }
 
-        SetButtonsEnabled(true);
+        SetOperationInProgress(sender as Button, false);
     }
 
     private async void OnValidateDocumentClicked(object? sender, EventArgs e)
@@ -140,7 +127,7 @@ public partial class IssuingPage : ContentPage
         if (!ValidateIssuingForm())
             return;
 
-        SetButtonsEnabled(false);
+        SetOperationInProgress(sender as Button, true);
 
         try
         {
@@ -157,18 +144,18 @@ public partial class IssuingPage : ContentPage
             await ShowErrorAsync("Document Validation Failed", ex);
         }
 
-        SetButtonsEnabled(true);
+        SetOperationInProgress(sender as Button, false);
     }
 
     private async void OnCancelDocumentClicked(object? sender, EventArgs e)
     {
         if (string.IsNullOrEmpty(_lastIssuedDocumentId))
         {
-            await DisplayAlert("Cancel Document", "No document has been issued yet to cancel.", "OK");
+            await DisplayAlertAsync("Cancel Document", "No document has been issued yet to cancel.", "OK");
             return;
         }
 
-        var confirmed = await DisplayAlert(
+        var confirmed = await DisplayAlertAsync(
             "Cancel Document",
             $"Are you sure you want to cancel document {_lastIssuedDocumentId}?",
             "Yes",
@@ -178,7 +165,7 @@ public partial class IssuingPage : ContentPage
         if (!confirmed)
             return;
 
-        SetButtonsEnabled(false);
+        SetOperationInProgress(sender as Button, true);
 
         try
         {
@@ -195,7 +182,7 @@ public partial class IssuingPage : ContentPage
             await ShowErrorAsync("Document Cancellation Failed", ex);
         }
 
-        SetButtonsEnabled(true);
+        SetOperationInProgress(sender as Button, false);
     }
 
     private async void OnSampleInvoiceClicked(object? sender, EventArgs e)
@@ -256,31 +243,31 @@ public partial class IssuingPage : ContentPage
     {
         if (pickerDocumentType.SelectedIndex == -1)
         {
-            DisplayAlert("Validation Error", "Please select a document type.", "OK");
+            DisplayAlertAsync("Validation Error", "Please select a document type.", "OK");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(entryCustomerName.Text))
         {
-            DisplayAlert("Validation Error", "Please enter a customer name.", "OK");
+            DisplayAlertAsync("Validation Error", "Please enter a customer name.", "OK");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(entryDocumentAmount.Text))
         {
-            DisplayAlert("Validation Error", "Please enter a document amount.", "OK");
+            DisplayAlertAsync("Validation Error", "Please enter a document amount.", "OK");
             return false;
         }
 
         if (!decimal.TryParse(entryDocumentAmount.Text, out decimal amount) || amount < 0)
         {
-            DisplayAlert("Validation Error", "Please enter a valid amount (must be 0 or positive).", "OK");
+            DisplayAlertAsync("Validation Error", "Please enter a valid amount (must be 0 or positive).", "OK");
             return false;
         }
 
         if (pickerCurrency.SelectedIndex == -1)
         {
-            DisplayAlert("Validation Error", "Please select a currency.", "OK");
+            DisplayAlertAsync("Validation Error", "Please select a currency.", "OK");
             return false;
         }
 
@@ -290,8 +277,8 @@ public partial class IssuingPage : ContentPage
     private IssuingRequest CreateIssuingRequest()
     {
         var docType = pickerDocumentType.Items[pickerDocumentType.SelectedIndex];
-        var docNumber = string.IsNullOrWhiteSpace(entryDocumentNumber.Text) 
-            ? $"{docType.ToUpper()}-{DateTime.Now:yyyyMMdd-HHmmss}" 
+        var docNumber = string.IsNullOrWhiteSpace(entryDocumentNumber.Text)
+            ? $"{docType.ToUpper()}-{DateTime.Now:yyyyMMdd-HHmmss}"
             : entryDocumentNumber.Text;
         var customerName = entryCustomerName.Text ?? "";
         var customerId = entryCustomerId.Text ?? "";
@@ -301,8 +288,8 @@ public partial class IssuingPage : ContentPage
 
         return new IssuingRequest
         {
-            ftCashBoxID = CASHBOX_ID,
-            ftQueueID = Guid.Parse(CASHBOX_ID),
+            ftCashBoxID = CASHBOX_ID.ToString(),
+            ftQueueID = CASHBOX_ID,
             ftPosSystemId = "d4a62055-ca6c-4372-ae4d-f835a88e4a5d",
             cbTerminalID = "T1",
             DocumentType = docType,
@@ -312,7 +299,6 @@ public partial class IssuingPage : ContentPage
             Amount = amount,
             Currency = currency,
             Description = description,
-            RequestId = Guid.NewGuid().ToString(),
             Timestamp = DateTime.UtcNow,
             cbUser = "Operator",
             cbArea = "Issuing"
@@ -323,13 +309,12 @@ public partial class IssuingPage : ContentPage
     {
         return new IssuingRequest
         {
-            ftCashBoxID = CASHBOX_ID,
-            ftQueueID = Guid.Parse(CASHBOX_ID),
+            ftCashBoxID = CASHBOX_ID.ToString(),
+            ftQueueID = CASHBOX_ID,
             ftPosSystemId = "d4a62055-ca6c-4372-ae4d-f835a88e4a5d",
             cbTerminalID = "T1",
             DocumentType = "Cancellation",
             DocumentNumber = documentId,
-            RequestId = Guid.NewGuid().ToString(),
             Timestamp = DateTime.UtcNow,
             cbUser = "Operator",
             cbArea = "Cancellation"
@@ -338,115 +323,25 @@ public partial class IssuingPage : ContentPage
 
     private async Task<string> ExecuteIssuingOperationAsync(Guid operationId, OperationType type, IssuingRequest? issuingRequest)
     {
-        var isIntentMode = IsIntentModeSelected();
 
-#if ANDROID
-        if (isIntentMode)
-        {
-            var data = await _fiskaltrusClient!.SendIssuingRequest(Platform.CurrentActivity!, operationId, issuingRequest!);
-            return JsonConvert.SerializeObject(data, Formatting.Indented);
-        }
-        else
-#endif
-        {
-            // For now, simulate issuing processing since we don't have direct HTTP/gRPC issuing endpoints
-            // In a real implementation, this would call the actual issuing endpoint
-            var simulatedResponse = type switch
-            {
-                OperationType.IssueDocument => CreateIssuingResponse(issuingRequest!, true, "Document issued successfully."),
-                OperationType.ValidateDocument => CreateValidationResponse(issuingRequest!, true, "Document validation passed."),
-                OperationType.CancelDocument => CreateCancellationResponse(issuingRequest!, true, "Document cancelled successfully."),
-                _ => throw new ArgumentException("Unknown operation type")
-            };
-
-            // Store the last issued document ID for cancellation
-            if (type == OperationType.IssueDocument && simulatedResponse.Success)
-            {
-                _lastIssuedDocumentId = simulatedResponse.DocumentId;
-            }
-
-            return JsonConvert.SerializeObject(simulatedResponse, Formatting.Indented);
-        }
+        var data = await _fiskaltrusClient!.SendIssuingRequest(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId, issuingRequest!);
+        return JsonConvert.SerializeObject(data, Formatting.Indented);
     }
 
-    private IssuingResponse CreateIssuingResponse(IssuingRequest request, bool success, string message)
+
+    private static bool UsesBoundService => SettingsPage.GetSelectedProtocol() == "service-ipc";
+
+    // The bound service supports parallel requests, so only the pressed button is
+    // disabled in that mode. Intent mode still disables all buttons while busy.
+    private void SetOperationInProgress(Button? pressedButton, bool inProgress)
     {
-        return new IssuingResponse
+        if (UsesBoundService && pressedButton != null)
         {
-            Success = success,
-            DocumentId = request.DocumentNumber,
-            DocumentType = request.DocumentType,
-            Amount = request.Amount,
-            Currency = request.Currency,
-            CustomerName = request.CustomerName,
-            CustomerId = request.CustomerId,
-            Timestamp = DateTime.UtcNow,
-            Message = message,
-            FiscalReference = $"FR-{DateTime.Now:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..8]}"
-        };
-    }
-
-    private IssuingResponse CreateValidationResponse(IssuingRequest request, bool success, string message)
-    {
-        return new IssuingResponse
-        {
-            Success = success,
-            DocumentId = request.DocumentNumber,
-            DocumentType = request.DocumentType,
-            Amount = request.Amount,
-            Currency = request.Currency,
-            CustomerName = request.CustomerName,
-            CustomerId = request.CustomerId,
-            Timestamp = DateTime.UtcNow,
-            Message = message,
-            ValidationDetails = new()
-            {
-                ["DocumentFormat"] = "Valid",
-                ["CustomerData"] = "Valid",
-                ["AmountFormat"] = "Valid",
-                ["TaxCalculation"] = "Valid"
-            }
-        };
-    }
-
-    private IssuingResponse CreateCancellationResponse(IssuingRequest request, bool success, string message)
-    {
-        return new IssuingResponse
-        {
-            Success = success,
-            DocumentId = request.DocumentNumber,
-            DocumentType = "Cancellation",
-            Timestamp = DateTime.UtcNow,
-            Message = message,
-            OriginalDocumentId = request.DocumentNumber
-        };
-    }
-
-    private bool IsIntentModeSelected()
-    {
-        return SettingsPage.GetSelectedProtocol().ToLower() == "intent";
-    }
-
-    private bool IsGrpcSelected()
-    {
-        return SettingsPage.GetSelectedProtocol().ToLower() == "grpc";
-    }
-
-    private async Task<IPOS> GetPOSAsync()
-    {
-        if (IsGrpcSelected())
-        {
-            return await GrpcPosFactory.CreatePosAsync(new GrpcClientOptions
-            {
-                Url = new Uri(QUEUE_URL_GRPC)
-            });
+            pressedButton.IsEnabled = !inProgress;
         }
         else
         {
-            return await HttpPosFactory.CreatePosAsync(new HttpPosClientOptions
-            {
-                Url = new Uri(QUEUE_URL_REST)
-            });
+            SetButtonsEnabled(!inProgress);
         }
     }
 
@@ -473,7 +368,7 @@ public partial class IssuingPage : ContentPage
             errorMessage = ex.InnerException.Message;
         }
 
-        await DisplayAlert(
+        await DisplayAlertAsync(
             $"? {title}",
             $"{errorMessage}\n\n?? Error Type: {errorType}",
             "OK"
@@ -511,7 +406,6 @@ public class IssuingRequest
     public decimal Amount { get; set; }
     public string Currency { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public string RequestId { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
 }
 

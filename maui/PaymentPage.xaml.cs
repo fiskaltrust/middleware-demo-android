@@ -1,30 +1,25 @@
-﻿using fiskaltrust.ifPOS.v1;
-using fiskaltrust.Middleware.Interface.Client.Grpc;
-using fiskaltrust.Middleware.Interface.Client.Http;
+﻿using fiskaltrust.ifPOS.v2;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 
-#if ANDROID
 using Android.Content;
 using Android.Widget;
 using Platform = Microsoft.Maui.ApplicationModel.Platform;
-#endif
+using Button = Microsoft.Maui.Controls.Button;
 
 namespace fiskaltrust.Middleware.Demo;
 
 public partial class PaymentPage : ContentPage
 {
-    private const string QUEUE_URL_GRPC = "grpc://localhost:1400";
-    private const string QUEUE_URL_REST = "http://localhost:1500/queue";
     private const bool SANDBOX = true;
 
-    private static string CASHBOX_ID => SettingsPage.GetCashboxId();
+    private static Guid CASHBOX_ID => Guid.TryParse(SettingsPage.GetCashboxId(), out var cashboxId)
+        ? cashboxId
+        : throw new InvalidOperationException("The configured Cashbox ID is not a valid GUID. Please check it on the Settings page.");
     private static string ACCESS_TOKEN => SettingsPage.GetAccessToken();
 
-#if ANDROID
-    private POSSystemAPIIntentService? _fiskaltrusClient;
-#endif
+    private PosSystemApiService? _fiskaltrusClient;
 
     // Last operation tracking
     private LastOperationInfo? _lastOperation;
@@ -51,12 +46,7 @@ public partial class PaymentPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-#if ANDROID
-        if (Guid.TryParse(CASHBOX_ID, out var cashboxGuid))
-        {
-            _fiskaltrusClient = new POSSystemAPIIntentService(cashboxGuid, ACCESS_TOKEN);
-        }
-#endif
+        _fiskaltrusClient = new PosSystemApiService();
         UpdateProtocolDisplay();
     }
 
@@ -96,7 +86,7 @@ public partial class PaymentPage : ContentPage
         }
 
         // Show result in message box
-        await DisplayAlert(
+        await DisplayAlertAsync(
             $"Retry Result: {_lastOperation.DisplayName}",
             result,
             "OK"
@@ -108,7 +98,7 @@ public partial class PaymentPage : ContentPage
         if (!ValidatePaymentForm())
             return;
 
-        SetButtonsEnabled(false);
+        SetOperationInProgress(sender as Button, true);
 
         try
         {
@@ -125,7 +115,7 @@ public partial class PaymentPage : ContentPage
             await ShowErrorAsync("Payment Failed", ex);
         }
 
-        SetButtonsEnabled(true);
+        SetOperationInProgress(sender as Button, false);
     }
 
     private void OnClearPaymentFormClicked(object? sender, EventArgs e)
@@ -138,13 +128,13 @@ public partial class PaymentPage : ContentPage
     {
         if (string.IsNullOrWhiteSpace(entryPaymentAmount.Text))
         {
-            DisplayAlert("Validation Error", "Please enter a payment amount.", "OK");
+            DisplayAlertAsync("Validation Error", "Please enter a payment amount.", "OK");
             return false;
         }
 
         if (!decimal.TryParse(entryPaymentAmount.Text, out decimal amount) || amount <= 0)
         {
-            DisplayAlert("Validation Error", "Please enter a valid positive amount.", "OK");
+            DisplayAlertAsync("Validation Error", "Please enter a valid positive amount.", "OK");
             return false;
         }
 
@@ -168,46 +158,24 @@ public partial class PaymentPage : ContentPage
 
     private async Task<string> ExecutePaymentOperationAsync(Guid operationId, PaymentRequest paymentRequest)
     {
-        var isIntentMode = IsIntentModeSelected();
-
-#if ANDROID
-        if (isIntentMode)
-        {
-            var data = await _fiskaltrusClient!.SendPaymentRequest(Platform.CurrentActivity!, operationId, paymentRequest);
-            return JsonConvert.SerializeObject(data, Formatting.Indented);
-        }
-        else
-#endif
-        {
-            throw new NotSupportedException();
-        }
+        var data = await _fiskaltrusClient!.SendPaymentRequest(Platform.CurrentActivity!, CASHBOX_ID, ACCESS_TOKEN, operationId, paymentRequest);
+        return JsonConvert.SerializeObject(data, Formatting.Indented);
     }
 
-    private bool IsIntentModeSelected()
-    {
-        return SettingsPage.GetSelectedProtocol().ToLower() == "intent";
-    }
 
-    private bool IsGrpcSelected()
-    {
-        return SettingsPage.GetSelectedProtocol().ToLower() == "grpc";
-    }
+    private static bool UsesBoundService => SettingsPage.GetSelectedProtocol() == "service-ipc";
 
-    private async Task<IPOS> GetPOSAsync()
+    // The bound service supports parallel requests, so only the pressed button is
+    // disabled in that mode. Intent mode still disables all buttons while busy.
+    private void SetOperationInProgress(Button? pressedButton, bool inProgress)
     {
-        if (IsGrpcSelected())
+        if (UsesBoundService && pressedButton != null)
         {
-            return await GrpcPosFactory.CreatePosAsync(new GrpcClientOptions
-            {
-                Url = new Uri(QUEUE_URL_GRPC)
-            });
+            pressedButton.IsEnabled = !inProgress;
         }
         else
         {
-            return await HttpPosFactory.CreatePosAsync(new HttpPosClientOptions
-            {
-                Url = new Uri(QUEUE_URL_REST)
-            });
+            SetButtonsEnabled(!inProgress);
         }
     }
 
@@ -228,7 +196,7 @@ public partial class PaymentPage : ContentPage
             errorMessage = ex.InnerException.Message;
         }
 
-        await DisplayAlert(
+        await DisplayAlertAsync(
             $"❌ {title}",
             $"{errorMessage}\n\n📋 Error Type: {errorType}",
             "OK"
@@ -256,7 +224,7 @@ public class PaymentRequest
     public string Action { get; set; } = string.Empty;
     public string Protocol { get; set; } = string.Empty;
 
-    public PayItem cbPayItem { get; set; } 
+    public PayItem cbPayItem { get; set; }
 }
 
 public class PaymentResponse
