@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   public void startService(View view) {
-    ComponentName componentName = new ComponentName("eu.fiskaltrust.androidlauncher", "eu.fiskaltrust.androidlauncher.Start");
+    ComponentName componentName = new ComponentName("eu.fiskaltrust.androidlauncher.grpc", "eu.fiskaltrust.androidlauncher.grpc.Start");
 
     Intent intent = new Intent(Intent.ACTION_SEND);
     intent.setComponent(componentName);
@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
   public void stopService(View view) {
     Intent intent = new Intent(Intent.ACTION_SEND);
-    ComponentName componentName = new ComponentName("eu.fiskaltrust.androidlauncher", "eu.fiskaltrust.androidlauncher.Stop");
+    ComponentName componentName = new ComponentName("eu.fiskaltrust.androidlauncher.grpc", "eu.fiskaltrust.androidlauncher.grpc.Stop");
     intent.setComponent(componentName);
 
     sendBroadcast(intent);
