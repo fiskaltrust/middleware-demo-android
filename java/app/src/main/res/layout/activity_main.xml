@@ -59,6 +59,35 @@
             android:layout_marginHorizontal="10dp"
             android:layout_marginVertical="15dp"/>
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Send requests via:"
+            android:textStyle="bold"
+            />
+
+        <RadioGroup
+            android:id="@+id/radioGroupTransport"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/radioGrpc"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checked="true"
+                android:text="gRPC (direct)"/>
+
+            <RadioButton
+                android:id="@+id/radioIntent"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Intent (PosSystemAPI)"/>
+        </RadioGroup>
+
         <Button
             android:id="@+id/btnSendEchoRequest"
             android:layout_width="match_parent"
