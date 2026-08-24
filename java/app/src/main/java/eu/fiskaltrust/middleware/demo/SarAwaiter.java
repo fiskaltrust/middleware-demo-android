@@ -6,9 +6,9 @@ import android.content.Intent;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-final class SarAwaiter {
+public final class SarAwaiter {
 
-  interface ResultListener {
+  public interface ResultListener {
     void onResult(int resultCode, Intent data);
   }
 
@@ -17,7 +17,7 @@ final class SarAwaiter {
 
   private SarAwaiter() { }
 
-  static void startForResult(Activity activity, Intent intent, ResultListener listener) {
+  public static void startForResult(Activity activity, Intent intent, ResultListener listener) {
     int requestCode = nextRequestCode.incrementAndGet();
     pending.put(requestCode, listener);
     activity.startActivityForResult(intent, requestCode);

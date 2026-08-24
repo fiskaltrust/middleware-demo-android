@@ -1,82 +1,67 @@
 package eu.fiskaltrust.middleware.demo;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
-import android.content.Intent;
 
 import com.google.gson.Gson;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
-import eu.fiskaltrust.middleware.util.Base64UrlUtil;
+import eu.fiskaltrust.middleware.demo.transport.PosSystemTransport;
+import eu.fiskaltrust.middleware.demo.transport.PosSystemTransportFactory;
 
 public class PosSystemApiClient {
-
-  private static final String LAUNCHER_PACKAGE = "eu.fiskaltrust.androidlauncher";
-  private static final String POS_SYSTEM_API_CLASS = "eu.fiskaltrust.androidlauncher.PosSystemAPI";
 
   private static final Gson gson = new Gson();
 
   private final String cashboxId;
   private final String accessToken;
-
-  public PosSystemApiClient(String cashboxId, String accessToken) {
-    this.cashboxId = cashboxId;
-    this.accessToken = accessToken;
-  }
+  private final PosSystemTransport transport;
 
   public interface Callback {
     void onSuccess(String content);
     void onError(Exception error);
   }
 
-  public void echo(Activity activity, String message, Callback callback) {
+  public PosSystemApiClient(String cashboxId, String accessToken, boolean useBoundService) {
+    this.cashboxId = cashboxId;
+    this.accessToken = accessToken;
+    this.transport = PosSystemTransportFactory.getInstance(useBoundService);
+  }
+
+  public void echo(Activity activity, String operationId, String message, Callback callback) {
     Map<String, String> body = new LinkedHashMap<>();
     body.put("Message", message);
-    send(activity, "POST", "/v2/echo", gson.toJson(body), callback);
+    send(activity, "POST", "/v2/echo", authHeaders(operationId), gson.toJson(body), callback);
   }
 
-  public void sign(Activity activity, String receiptRequestJson, Callback callback) {
-    send(activity, "POST", "/v2/sign", receiptRequestJson, callback);
+  public void sign(Activity activity, String operationId, String receiptRequestJson, Callback callback) {
+    send(activity, "POST", "/v2/sign", authHeaders(operationId), receiptRequestJson, callback);
   }
 
-  private void send(Activity activity, String method, String path, String body, Callback callback) {
+  public void pair(Activity activity, String pinRequestJson, Callback callback) {
+    send(activity, "POST", "/v2/pair", new LinkedHashMap<>(), pinRequestJson, callback);
+  }
+
+  private Map<String, String> authHeaders(String operationId) {
     Map<String, String> headers = new LinkedHashMap<>();
     headers.put("x-cashbox-id", cashboxId);
     headers.put("x-cashbox-accesstoken", accessToken);
-    headers.put("x-operation-id", UUID.randomUUID().toString());
+    headers.put("x-operation-id", operationId);
+    return headers;
+  }
 
-    Intent intent = new Intent();
-    intent.setClassName(LAUNCHER_PACKAGE, POS_SYSTEM_API_CLASS);
-    intent.putExtra("Method", method);
-    intent.putExtra("Path", path);
-    intent.putExtra("HeaderJsonObjectBase64Url", Base64UrlUtil.encode(gson.toJson(headers)));
-    if (body != null) {
-      intent.putExtra("BodyBase64Url", Base64UrlUtil.encode(body));
-    }
-
-    try {
-      SarAwaiter.startForResult(activity, intent, (resultCode, data) -> {
-        if (resultCode != Activity.RESULT_OK || data == null) {
-          callback.onError(new IllegalStateException("PosSystemAPI request failed or was cancelled"));
-          return;
-        }
-
-        String statusCode = data.getStringExtra("StatusCode");
-        String contentBase64Url = data.getStringExtra("ContentBase64Url");
-        String content = contentBase64Url != null ? Base64UrlUtil.decode(contentBase64Url) : "";
-
-        if (statusCode == null || !statusCode.startsWith("2")) {
-          callback.onError(new IllegalStateException("PosSystemAPI returned status " + statusCode + ": " + content));
-          return;
-        }
-
+  private void send(Activity activity, String method, String path, Map<String, String> headers, String body, Callback callback) {
+    transport.send(activity, method, path, headers, body, new PosSystemTransport.Callback() {
+      @Override
+      public void onSuccess(String content) {
         callback.onSuccess(content);
-      });
-    } catch (ActivityNotFoundException e) {
-      callback.onError(e);
-    }
+      }
+
+      @Override
+      public void onError(Exception error) {
+        callback.onError(error);
+      }
+    });
   }
 }
