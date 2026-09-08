@@ -1,149 +1,346 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="10dp"
-        android:orientation="vertical">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
-        <TextView
-            android:layout_marginVertical="20px"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="This is a sample application demonstrating the fiskaltrust.Middleware usage on Android.\nStarting the service might take up to 45 seconds, depending on the TSE, as it includes a self-test for Swissbit. The state of the service is displayed in the notification.\n\nWe recommend to poll the gRPC queue endpoint until it's available, a sample on how to do this will be added soon."
-            />
+            android:layout_height="wrap_content">
 
-        <LinearLayout
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:layout_alignParentBottom="true"
-            android:orientation="horizontal">
-            <Button
-                android:id="@+id/btnStartService"
+            <!-- ================= DEMO TAB ================= -->
+            <LinearLayout
+                android:id="@+id/demoSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="startService"
-                android:text="Start service"/>
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="visible">
 
-            <Button
-                android:id="@+id/btnStopService"
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Protocol (change in Settings):"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+
+                <TextView
+                    android:id="@+id/txtCurrentProtocol"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="INTENT-ACTIVITY"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                    android:textStyle="bold"/>
+
+                <Button
+                    android:id="@+id/btnRetryLastOperation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Retry Last Operation"
+                    android:visibility="gone"/>
+
+                <Button
+                    android:id="@+id/btnSendEchoRequest"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Send Echo Request"/>
+
+                <Button
+                    android:id="@+id/btnRestartConfig"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Restart &amp; Pull Config"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Echo result:"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+
+                <TextView
+                    android:id="@+id/txtResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                    android:textIsSelectable="true"/>
+
+                <Button
+                    android:id="@+id/btnSendStartReceipt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Send start receipt"/>
+
+                <Button
+                    android:id="@+id/btnSendZeroReceipt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Send zero receipt"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Special receipt result:"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+
+                <TextView
+                    android:id="@+id/txtSpecialReceiptResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                    android:textIsSelectable="true"/>
+
+                <Button
+                    android:id="@+id/btnSendSignRequest"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Send Sign Request"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Sign result:"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+
+                <TextView
+                    android:id="@+id/txtSignResult"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                    android:textIsSelectable="true"/>
+            </LinearLayout>
+
+            <!-- ================= SETTINGS TAB ================= -->
+            <LinearLayout
+                android:id="@+id/settingsSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="stopService"
-                android:text="Stop service"/>
-        </LinearLayout>
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone">
 
-        <TextView
-            android:id="@+id/txtServiceStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text=""
-            android:gravity="center"
-            />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Pairing PIN"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                    android:textStyle="bold"/>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#D3D3D3"
-            android:layout_marginHorizontal="10dp"
-            android:layout_marginVertical="15dp"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Enter the PIN shown in the fiskaltrust.Portal to automatically retrieve your Cashbox ID and Access Token."
+                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+
+                <EditText
+                    android:id="@+id/entryPairPin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:maxLength="4"
+                    android:hint="0000"/>
+
+                <Button
+                    android:id="@+id/btnPair"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Pair"
+                    android:enabled="false"/>
+
+                <LinearLayout
+                    android:id="@+id/pairingStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <ProgressBar
+                        style="?android:attr/progressBarStyleSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Pairing…"/>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Cashbox ID"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+
+                <EditText
+                    android:id="@+id/entryCashboxId"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Access Token"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+
+                <EditText
+                    android:id="@+id/entryAccessToken"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Communication Protocol"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                    android:textStyle="bold"/>
+
+                <RadioGroup
+                    android:id="@+id/radioGroupProtocol"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <RadioButton
+                        android:id="@+id/radioIntentActivity"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Intent-Activity"
+                        android:checked="true"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="32dp"
+                        android:text="Start launcher PosSystemAPI Activity for request/response"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+
+                    <RadioButton
+                        android:id="@+id/radioServiceIpc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Service-IPC (Bound)"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="32dp"
+                        android:text="Use bound IPC (Messenger) to call launcher PosSystemAPIService"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+                </RadioGroup>
+            </LinearLayout>
+
+            <!-- ================= ABOUT TAB ================= -->
+            <LinearLayout
+                android:id="@+id/aboutSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="fiskaltrust.Middleware Demo"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Version 1.0"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="This is a sample application demonstrating the fiskaltrust.Middleware usage on Android."
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Communication Protocols: Intent-based uses the Android Intent system for inter-app communication. Message-based uses an Android Bound Service with Messages for inter-app communication. Change the protocol in the Settings tab."
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Service Information: Starting the service might take up to 45 seconds, depending on the TSE, as it includes a self-test for Swissbit. The state of the service is displayed in the notification."
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Requirements: Make sure the fiskaltrust launcher app is installed and running on your device."
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"/>
+            </LinearLayout>
+        </FrameLayout>
+    </ScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider"/>
+
+    <LinearLayout
+        style="?android:attr/buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
         <Button
-            android:id="@+id/btnSendEchoRequest"
-            android:layout_width="match_parent"
+            android:id="@+id/tabDemo"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:onClick="sendEchoRequest"
-            android:text="Send Echo Request"/>
-
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="Echo result:"
-            android:textStyle="bold"
-            />
-
-        <TextView
-            android:id="@+id/txtResult"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text=""
-            />
-
-
-        <LinearLayout
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:layout_alignParentBottom="true"
-            android:orientation="horizontal">
-            <Button
-                android:id="@+id/btnSendStartReceipt"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="sendStartReceipt"
-                android:text="Send start receipt"/>
-
-            <Button
-                android:id="@+id/btnSendZeroReceipt"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="sendZeroReceipt"
-                android:text="Send zero receipt"/>
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="Special receipt result: "
-            android:textStyle="bold"
-            />
-        <TextView
-            android:id="@+id/txtSpecialReceiptResult"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text=""
-            />
+            android:layout_weight="1"
+            android:text="Demo"/>
 
         <Button
-            android:id="@+id/btnSendSignRequest"
-            android:layout_width="match_parent"
+            android:id="@+id/tabSettings"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:onClick="sendSignReceipt"
-            android:text="Send Sign Request"/>
+            android:layout_weight="1"
+            android:text="Settings"/>
 
-        <TextView
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/tabAbout"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="Sign result: "
-            android:textStyle="bold"
-            />
-        <TextView
-            android:id="@+id/txtSignResult"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text=""
-            />
-
+            android:layout_weight="1"
+            android:text="About"/>
     </LinearLayout>
 
-</ScrollView>
-
+</LinearLayout>
