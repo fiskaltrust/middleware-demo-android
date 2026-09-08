@@ -5,13 +5,15 @@ Demo applications written in Java, Xamarin and .NET MAUI that demonstrate how to
 
 ### Prerequisites
 In order to use these demo applications, the following prerequisites are required:
-- *The demo application*: Just clone or download this repository. For an optimal experience, we recommend using [Android Studio](https://developer.android.com/studio) for the Java samples, and [Visual Studio](https://visualstudio.microsoft.com/) for the Xamarin ones. Both can be downloaded for free.
+- *The demo application*: Just clone or download this repository. For an optimal experience, we recommend using [Android Studio](https://developer.android.com/studio) for the Java sample, and [Visual Studio](https://visualstudio.microsoft.com/) with the Xamarin or .NET MAUI workload for the Xamarin and MAUI ones. All of them can be downloaded for free.
 - *The fiskaltrust.Middleware for Android* installed on your device, which can be configured and downloaded via the [fiskaltrust.Portal](https://portal-sandbox.fiskaltrust.de). Please note that the Android download is only available for cashboxes that only contain supported packages (SQLite, Fiskaly and Swissbit) and supported protocols (gRPC and REST).
 - The *Cashbox Id* and *Access Token* are visible in the portal, and are needed to start the Middleware on Android.
 
 The **Java example** in this repository talks to the Android Launcher's PosSystemAPI, an HTTP style request/response contract carried over Android Intents. Requests and responses are plain JSON, with the method, path, headers and body passed as Intent extras (headers and body are base64url encoded). The demo lets you switch between the two available transports in its Settings tab, either starting the Launcher's PosSystemAPI Activity for each request (Intent-Activity) or binding to its PosSystemAPIService and exchanging Messenger messages (Service-IPC).
 
 The **Xamarin/C# example** uses the [fiskaltrust.Middleware.Interface.Client.Grpc](https://www.nuget.org/packages/fiskaltrust.Middleware.Interface.Client.Grpc/) NuGet package, which doesn't need the _.proto_ files. A more detailed documentation about this package can be found in its [repository](https://github.com/fiskaltrust/middleware-interface-dotnet). HTTP works without any additional required files anyway, and uses the [fiskaltrust.Middleware.Interface.Client.Http](https://www.nuget.org/packages/fiskaltrust.Middleware.Interface.Client.Http/) package.
+
+The **.NET MAUI example** is the actively developed successor to the Xamarin one. It talks to the Android Launcher's PosSystemAPI, either starting its Activity for each request or binding to its service, selectable on its Settings page. It also demonstrates PIN based pairing, where entering a PIN shown in the fiskaltrust.Portal automatically retrieves the Cashbox Id and Access Token.
 
 ### Running the Demo
 Make sure to download the respective Android Launcher (gRPC or HTTP) from the Portal and install the APK on your device first (or get it from Google Play). This App contains a background service that can be started and stopped via intents, and spins up a gRPC server. Thus, the Android App behaves exactly the same as the fiskaltrust.Middleware does on Desktop operating systems.
@@ -41,6 +43,14 @@ gradle installDebug
 To run the Xamarin example, Visual Studio with the Xamarin workload is required. Please follow the [official docs](https://docs.microsoft.com/en-us/xamarin/?view=vs-2019) to download and install it on your machine. 
 
 After this, opening the solution in the _xamarin_ folder of this repository and clicking _Debug_ should be all.
+
+#### MAUI
+To run the MAUI example, Visual Studio with the .NET MAUI workload is required. Please follow the [official docs](https://learn.microsoft.com/en-us/dotnet/maui/get-started/installation) to download and install it on your machine.
+
+After this, opening the solution in the _maui_ folder of this repository and clicking _Debug_ should be all. It's also possible to build it from the command line:
+```sh
+dotnet build -f net10.0-android
+```
 
 ### Minimal sample
 Starting and stopping the Middleware is fairly easy, as it can be controlled via Intents. 
