@@ -1,7 +1,5 @@
 # fiskaltrust.Middleware demo (Android)
-Demo applications written in Java and Xamarin that demonstrate how to call the German fiskaltrust.Middleware on Android devices using gRPC or HTTP/REST*.
-
-*_The Android demo for Java does not yet contain an example about how to connect to the HTTP Android Launcher. While we update this, please refer to our [regular Java samples](https://github.com/fiskaltrust/middleware-demo-java)._
+Demo applications written in Java, Xamarin and .NET MAUI that demonstrate how to call the German fiskaltrust.Middleware on Android devices using gRPC or HTTP/REST.
 
 ## Getting Started
 
@@ -11,7 +9,7 @@ In order to use these demo applications, the following prerequisites are require
 - *The fiskaltrust.Middleware for Android* installed on your device, which can be configured and downloaded via the [fiskaltrust.Portal](https://portal-sandbox.fiskaltrust.de). Please note that the Android download is only available for cashboxes that only contain supported packages (SQLite, Fiskaly and Swissbit) and supported protocols (gRPC and REST).
 - The *Cashbox Id* and *Access Token* are visible in the portal, and are needed to start the Middleware on Android.
 
-The **Java example** in this repository uses the _.proto_ files of the fiskaltrust Middleware interface to automatically generate the client and the contracts at build time via the officially suggested gRPC packages (a comprehensive tutorial and overview can be found [here](https://grpc.io/docs/tutorials/basic/java/)). The latest _.proto_ files are available in our [interface-doc repository](https://github.com/fiskaltrust/interface-doc/tree/master/dist/protos).
+The **Java example** in this repository talks to the Android Launcher's PosSystemAPI, an HTTP style request/response contract carried over Android Intents. Requests and responses are plain JSON, with the method, path, headers and body passed as Intent extras (headers and body are base64url encoded). The demo lets you switch between the two available transports in its Settings tab, either starting the Launcher's PosSystemAPI Activity for each request (Intent-Activity) or binding to its PosSystemAPIService and exchanging Messenger messages (Service-IPC).
 
 The **Xamarin/C# example** uses the [fiskaltrust.Middleware.Interface.Client.Grpc](https://www.nuget.org/packages/fiskaltrust.Middleware.Interface.Client.Grpc/) NuGet package, which doesn't need the _.proto_ files. A more detailed documentation about this package can be found in its [repository](https://github.com/fiskaltrust/middleware-interface-dotnet). HTTP works without any additional required files anyway, and uses the [fiskaltrust.Middleware.Interface.Client.Http](https://www.nuget.org/packages/fiskaltrust.Middleware.Interface.Client.Http/) package.
 
@@ -30,13 +28,13 @@ If you require other Queue or SCU packages on Android, please reach out to our [
 #### Java
 We recommend using Android Studio to run the Java Android samples, as we used it to implement them. Just open the _java_ folder and wait until gradle synced everything.
 
-However, it's also possible to directly build the APK from the command line:
+The project does not ship a Gradle wrapper, so building from the command line requires a local Gradle installation matching the version referenced in `java/gradle/gradle-daemon-jvm.properties`:
 ```sh
 # Build APK only
-gradlew assembleDebug
+gradle assembleDebug
 
 # Optionally, to build the APK and install it on your connected device automatically:
-gradlew installDebug
+gradle installDebug
 ```
 
 #### Xamarin/C#
@@ -49,10 +47,7 @@ Starting and stopping the Middleware is fairly easy, as it can be controlled via
 
 The Middleware can e.g. be started with the following Java code:
 ```java
-// For gRPC
-ComponentName componentName = new ComponentName("eu.fiskaltrust.androidlauncher.grpc", "eu.fiskaltrust.androidlauncher.grpc.Start");
-// Alternatively, for HTTP/REST
-ComponentName componentName = new ComponentName("eu.fiskaltrust.androidlauncher.http", "eu.fiskaltrust.androidlauncher.http.Start");
+ComponentName componentName = new ComponentName("eu.fiskaltrust.androidlauncher", "eu.fiskaltrust.androidlauncher.Start");
 
 Intent intent = new Intent(Intent.ACTION_SEND);
 intent.setComponent(componentName);
@@ -71,10 +66,7 @@ sendBroadcast(intent);
 A stop intent looks similar:
 
 ```java
-// For gRPC
-ComponentName componentName = new ComponentName("eu.fiskaltrust.androidlauncher.grpc", "eu.fiskaltrust.androidlauncher.grpc.Stop");
-// Alternatively, for HTTP/REST
-ComponentName componentName = new ComponentName("eu.fiskaltrust.androidlauncher.http", "eu.fiskaltrust.androidlauncher.http.Stop");
+ComponentName componentName = new ComponentName("eu.fiskaltrust.androidlauncher", "eu.fiskaltrust.androidlauncher.Stop");
 
 Intent intent = new Intent(Intent.ACTION_SEND);
 intent.setComponent(componentName);
@@ -82,14 +74,18 @@ intent.setComponent(componentName);
 sendBroadcast(intent);
 ```
 
-After the Middleware successfully booted (the state is also shown in the Android notification), an echo Request via Java can e.g. be sent like this:
+After the Middleware successfully booted (the state is also shown in the Android notification), requests are sent to the Launcher's PosSystemAPI, either as an Activity started via `startActivityForResult` or via a bound service. An echo request is a plain HTTP style call to `/v2/echo`, e.g.:
 ```java
-ManagedChannel channel = ManagedChannelBuilder.forTarget(url).usePlaintext().build();
-POSGrpc.POSBlockingStub blockingStub = POSGrpc.newBlockingStub(channel);
+Intent intent = new Intent();
+intent.setClassName("eu.fiskaltrust.androidlauncher", "eu.fiskaltrust.androidlauncher.PosSystemAPI");
+intent.putExtra("Method", "POST");
+intent.putExtra("Path", "/v2/echo");
+intent.putExtra("HeaderJsonObjectBase64Url", headersBase64Url);   // x-cashbox-id, x-cashbox-accesstoken, x-operation-id
+intent.putExtra("BodyBase64Url", bodyBase64Url);   // base64url encoded JSON, e.g. {"Message":"Hello Android!"}
 
-IPOS.EchoRequest request = IPOS.EchoRequest.newBuilder().setMessage("Hello Android!").build();
-IPOS.EchoResponse response = blockingStub.echo(request);
+startActivityForResult(intent, requestCode);
 ```
+The result Intent carries a `StatusCode` extra and a `ContentBase64Url` extra with the response body. A full working implementation of this, including the bound service alternative, is available in [PosSystemApiClient.java](java/app/src/main/java/eu/fiskaltrust/middleware/demo/PosSystemApiClient.java), [ActivityTransport.java](java/app/src/main/java/eu/fiskaltrust/middleware/demo/transport/ActivityTransport.java) and [BoundServiceTransport.java](java/app/src/main/java/eu/fiskaltrust/middleware/demo/transport/BoundServiceTransport.java).
 
 ### State and log information
 The fiskaltrust.Middleware for Android publishes two endpoints to request both the state and the logs under the well-known HTTP address and port http://localhost:4654/:
@@ -105,11 +101,6 @@ The fiskaltrust.Middleware for Android publishes two endpoints to request both t
 
 #### Direct log access
 For security reasons, log files are stored in the private directory of the Middleware App. In case the log endpoint described above is not reachable (e.g. because the Middleware cannot be started at all), log files can also be accessed via an Android _content provider_. We've implemented a specific activity that can be queried to return a `content://` link to the latest log file. The usage of this provider is e.g. demonstrated [here](xamarin/MainActivity.cs#L206), more details about content providers are available in the [Android docs](https://developer.android.com/reference/androidx/core/content/FileProvider).
-
-### Additional information
-The fiskaltrust.Middleware is written in C# and uses some language-specific functionalities that a user needs to take care of when connecting via gRPC:
-
-Due to the binary serialization in Protobuf, `DateTime` and `decimal` (which are native types in C#) need to be converted when used outside of .NET. Thus, the `bcl.proto` is referenced in the `IPOS.proto` file. An example how to deal with these types is shown in [ProtoUtil.java](java/app/src/main/java/eu/fiskaltrust/middleware/util/ProtoUtil.java).
 
 ## Documentation
 The full documentation for the interface can be found on https://docs.fiskaltrust.cloud. It is activeliy maintained and developed in our [interface-doc repository](https://github.com/fiskaltrust/interface-doc). 
