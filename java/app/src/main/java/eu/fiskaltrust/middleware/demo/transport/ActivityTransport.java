@@ -28,21 +28,27 @@ public class ActivityTransport implements PosSystemTransport {
 
     try {
       SarAwaiter.startForResult(activity, intent, (resultCode, data) -> {
-        if (resultCode != Activity.RESULT_OK || data == null) {
-          callback.onError(new IllegalStateException("PosSystemAPI request failed or was cancelled"));
-          return;
+        // This listener runs synchronously inside Activity.onActivityResult; an uncaught
+        // exception here would crash the app while the framework delivers the result.
+        try {
+          if (resultCode != Activity.RESULT_OK || data == null) {
+            callback.onError(new IllegalStateException("PosSystemAPI request failed or was cancelled"));
+            return;
+          }
+
+          String statusCode = data.getStringExtra(PosSystemApiServiceContract.KEY_STATUS_CODE);
+          String contentBase64Url = data.getStringExtra(PosSystemApiServiceContract.KEY_CONTENT_BASE64URL);
+          String content = contentBase64Url != null ? Base64UrlUtil.decode(contentBase64Url) : "";
+
+          if (statusCode == null || !statusCode.startsWith("2")) {
+            callback.onError(new IllegalStateException("PosSystemAPI returned status " + statusCode + ": " + content));
+            return;
+          }
+
+          callback.onSuccess(content);
+        } catch (RuntimeException e) {
+          callback.onError(e);
         }
-
-        String statusCode = data.getStringExtra(PosSystemApiServiceContract.KEY_STATUS_CODE);
-        String contentBase64Url = data.getStringExtra(PosSystemApiServiceContract.KEY_CONTENT_BASE64URL);
-        String content = contentBase64Url != null ? Base64UrlUtil.decode(contentBase64Url) : "";
-
-        if (statusCode == null || !statusCode.startsWith("2")) {
-          callback.onError(new IllegalStateException("PosSystemAPI returned status " + statusCode + ": " + content));
-          return;
-        }
-
-        callback.onSuccess(content);
       });
     } catch (ActivityNotFoundException e) {
       callback.onError(e);

@@ -35,12 +35,6 @@ public class MainActivity extends AppCompatActivity {
   private View demoSection;
   private View settingsSection;
   private View aboutSection;
-  private TextView txtTabDemo;
-  private TextView txtTabSettings;
-  private TextView txtTabAbout;
-  private View indicatorDemo;
-  private View indicatorSettings;
-  private View indicatorAbout;
 
   // Demo tab
   private TextView txtCurrentProtocol;
@@ -99,12 +93,6 @@ public class MainActivity extends AppCompatActivity {
     demoSection = findViewById(R.id.demoSection);
     settingsSection = findViewById(R.id.settingsSection);
     aboutSection = findViewById(R.id.aboutSection);
-    txtTabDemo = findViewById(R.id.txtTabDemo);
-    txtTabSettings = findViewById(R.id.txtTabSettings);
-    txtTabAbout = findViewById(R.id.txtTabAbout);
-    indicatorDemo = findViewById(R.id.indicatorDemo);
-    indicatorSettings = findViewById(R.id.indicatorSettings);
-    indicatorAbout = findViewById(R.id.indicatorAbout);
 
     txtCurrentProtocol = findViewById(R.id.txtCurrentProtocol);
     btnRetryLastOperation = findViewById(R.id.btnRetryLastOperation);
@@ -125,9 +113,6 @@ public class MainActivity extends AppCompatActivity {
     radioGroupProtocol = findViewById(R.id.radioGroupProtocol);
   }
 
-  private static final int TAB_ACTIVE_COLOR = 0xFF512BD4;
-  private static final int TAB_INACTIVE_COLOR = 0xFF757575;
-
   private void wireTabBar() {
     findViewById(R.id.tabDemo).setOnClickListener(v -> showTab(demoSection));
     findViewById(R.id.tabSettings).setOnClickListener(v -> showTab(settingsSection));
@@ -141,16 +126,6 @@ public class MainActivity extends AppCompatActivity {
     if (section == demoSection) {
       txtCurrentProtocol.setText(settingsStore.getSelectedProtocol().toUpperCase(Locale.US));
     }
-
-    setTabStyle(txtTabDemo, indicatorDemo, section == demoSection);
-    setTabStyle(txtTabSettings, indicatorSettings, section == settingsSection);
-    setTabStyle(txtTabAbout, indicatorAbout, section == aboutSection);
-  }
-
-  private void setTabStyle(TextView label, View indicator, boolean active) {
-    label.setTextColor(active ? TAB_ACTIVE_COLOR : TAB_INACTIVE_COLOR);
-    label.setTypeface(null, active ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
-    indicator.setVisibility(active ? View.VISIBLE : View.INVISIBLE);
   }
 
   @Override
